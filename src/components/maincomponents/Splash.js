@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ImageBackground, Image, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
+import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
 import { openDatabase } from 'react-native-sqlite-storage'
 
 const db = openDatabase({
@@ -19,7 +20,7 @@ const Splash = () => {
 
   return (
     <View style={styles.mainView}>
-      <ImageBackground blurRadius={20} source={{uri: "https://w0.peakpx.com/wallpaper/305/169/HD-wallpaper-street-light-streets-fog.jpg"}} style={styles.imagebackgroundstyle}>
+      <ImageBackground blurRadius={20} source={NeXeBg} style={styles.imagebackgroundstyle}>
         <Image source={LogoNeon} style={styles.logoStyle} />
       </ImageBackground>
     </View>

@@ -1,12 +1,17 @@
-import { View, Text, StyleSheet, ImageBackground, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules } from 'react-native'
+import { View, Text, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
+import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
+import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
 })
+
+const TabStack = createNativeStackNavigator();
 
 const Home = () => {
 
@@ -92,9 +97,74 @@ const Home = () => {
     // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
   }
 
+  const addApptoHome = () => {
+    db.transaction(txn => {
+      txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
+      [appFloaterData.appname, "Home"],
+      (sqlTxn, res) => {
+        //console.log(res.rowsAffected)
+        if(res.rows.length == 0){
+          addApptoHomeProceed()
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("App already added", ToastAndroid.SHORT)
+          }
+          else{
+              alert("App already added")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show("Error scanning Home", ToastAndroid.SHORT)
+        }
+        else{
+            alert("Error scanning Home")
+        }
+      })
+    })
+
+    //console.log(appFloaterData.appname)
+  }
+
+  const addApptoHomeProceed = () => {
+    db.transaction(txn => {
+      txn.executeSql(`INSERT INTO desktopShortcuts (appName, appCom, appBase, appCategory) VALUES (?,?,?,?)`,
+      [appFloaterData.appname, appFloaterData.appcom, appFloaterData.appbase, "Home"],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show(`${appFloaterData.appname} added to Home`, ToastAndroid.SHORT)
+          }
+          else{
+              alert(`${appFloaterData.appname} added to Home`)
+          }
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Cannot add to Home", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Cannot add to Home")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show("Cannot add to Home", ToastAndroid.SHORT)
+        }
+        else{
+            alert("Cannot add to Home")
+        }
+      })
+    })
+  }
+
   return (
     <View style={styles.mainView}>
-      <ImageBackground blurRadius={0} source={{uri: "https://w0.peakpx.com/wallpaper/305/169/HD-wallpaper-street-light-streets-fog.jpg"}} style={styles.imagebackgroundstyle}>
+      <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
         {appFloaterData.appname != ""? (
           <View style={styles.viewFloater}>
             <View style={styles.viewFloaterTitle}>
@@ -105,7 +175,7 @@ const Home = () => {
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center", marginTop: 5}}>
                 <Text style={styles.appfloaterMenu}>App Info</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+              <TouchableOpacity onPress={() => { addApptoHome() }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
                 <Text style={styles.appfloaterMenu}>Add to Home</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
@@ -150,7 +220,9 @@ const Home = () => {
           </View>
         </View>
         <View style={styles.viewDesktop}>
-          <Text>...</Text>
+          <TabStack.Navigator screenOptions={{headerShown: false}}>
+            <TabStack.Screen name='Desktop' component={Desktop} />
+          </TabStack.Navigator>
         </View>
         <View style={styles.viewTaskBar}>
           <View style={styles.flexedTaskBar}>
