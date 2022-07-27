@@ -16,6 +16,8 @@ import {
   Text,
   useColorScheme,
   View,
+  ToastAndroid,
+  Platform
 } from 'react-native';
 
 import {
@@ -29,6 +31,11 @@ import Home from './src/components/maincomponents/Home';
 import Splash from './src/components/maincomponents/Splash';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
+import { openDatabase } from 'react-native-sqlite-storage'
+
+const db = openDatabase({
+  name: "neonxenonhomedb"
+})
 
 const MainStack = createNativeStackNavigator();
 
@@ -68,10 +75,66 @@ const App: () => Node = () => {
   const [splashstatus, setsplashstatus] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setsplashstatus(false);
-    }, 4000)
+    // setTimeout(() => {
+    //   setsplashstatus(false);
+    // }, 4000)
+    initializeDatabase()
   },[])
+
+  const initializeDatabase = () => {
+    db.transaction(txn => {
+      txn.executeSql(`SELECT DISTINCT tbl_name FROM sqlite_master where tbl_name='desktopShortcuts'`,[], (sqlTxn, res) => {
+        // console.log(res.rows.length)
+        if(res.rows.length == 0){
+          createTables();
+          setTimeout(() => {
+            setsplashstatus(false);
+          }, 4000)
+        }
+        else{
+          setTimeout(() => {
+            setsplashstatus(false);
+          }, 4000)
+        }
+      },
+      (error) => {
+          console.log("error on creating table " + error.message);
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error Initializing Database!", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error Initializing Database!")
+          }
+      })
+    })
+  }
+
+  const createTables = () => {
+    db.transaction(txn => {
+      txn.executeSql(
+        `CREATE TABLE IF NOT EXISTS desktopShortcuts (id INTEGER PRIMARY KEY AUTOINCREMENT, appName VARCHAR(20), appCom TEXT, appBase BLOB, appCategory TEXT)`,
+        [],
+        (sqlTxn, res) => {
+          // console.log("table created successfully");
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Desktop Initialized", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Desktop Initialized")
+          }
+        },
+        error => {
+          console.log("error on creating table " + error.message);
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error Creating Database!", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error Creating Database!")
+          }
+        },
+      );
+    });
+  };
 
   return (
     <NavigationContainer>

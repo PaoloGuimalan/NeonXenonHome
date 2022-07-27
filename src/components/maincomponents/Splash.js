@@ -1,6 +1,11 @@
 import { View, Text, StyleSheet, ImageBackground, Image, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
+import { openDatabase } from 'react-native-sqlite-storage'
+
+const db = openDatabase({
+  name: "neonxenonhomedb"
+})
 
 const Splash = () => {
 

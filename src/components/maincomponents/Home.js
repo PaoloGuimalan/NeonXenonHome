@@ -2,6 +2,11 @@ import { View, Text, StyleSheet, ImageBackground, BackHandler, Image, ScrollView
 import React, { useState, useEffect } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
+import { openDatabase } from 'react-native-sqlite-storage'
+
+const db = openDatabase({
+  name: "neonxenonhomedb"
+})
 
 const Home = () => {
 
@@ -10,6 +15,8 @@ const Home = () => {
 
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
+
+  const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: ""});
 
   useEffect(() => {
     BackHandler.addEventListener('hardwareBackPress', function() {
@@ -31,9 +38,10 @@ const Home = () => {
   },[])
 
   useEffect(() => {
+    dateTimeSetter()
     setInterval(() => {
       dateTimeSetter();
-    }, 1000);
+    }, 60000);
   },[])
 
   const dateTimeSetter = () => {
@@ -45,7 +53,8 @@ const Home = () => {
     const seconds = new Date().getSeconds();
 
     setcurrentDate(`${month} / ${date} / ${year}`);
-    setcurrentTime(`${hours} : ${minutes} : ${seconds}`);
+    setcurrentTime(`${hours} : ${minutes}`);
+    //setcurrentTime(`${hours} : ${minutes} : ${seconds}`);
   }
 
   const animStyles = StyleSheet.create({
@@ -53,7 +62,7 @@ const Home = () => {
       backgroundColor: "black",
       width: "90%",
       maxWidth: 500,
-      height: "100%",
+      height: "80%",
       maxHeight: 400,
       position: "absolute",
       bottom: menuWindow? 60 : -400,
@@ -74,9 +83,47 @@ const Home = () => {
     }
   }
 
+  const holdAppsOption = (apps, evt) => {
+    var appName = apps.replace(/\"/g, "").split(",")[0]
+    var appCom = apps.replace(/\"/g, "").split(",")[1]
+    var appBase = apps.replace(/\"/g, "").split(",")[2]
+
+    setappFloaterData({appname: appName, appcom: appCom, appbase: appBase})
+    // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={{uri: "https://w0.peakpx.com/wallpaper/305/169/HD-wallpaper-street-light-streets-fog.jpg"}} style={styles.imagebackgroundstyle}>
+        {appFloaterData.appname != ""? (
+          <View style={styles.viewFloater}>
+            <View style={styles.viewFloaterTitle}>
+              <Image source={{uri: "data:image/png;base64," + appFloaterData.appbase}} style={styles.iconAppFloat} />
+              <Text style={styles.appFloaterLabelStyle} numberOfLines={2}>{appFloaterData.appname}</Text>
+            </View>
+            <View style={styles.appfloaterMenuMiddle}>
+              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center", marginTop: 5}}>
+                <Text style={styles.appfloaterMenu}>App Info</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+                <Text style={styles.appfloaterMenu}>Add to Home</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+                <Text style={styles.appfloaterMenu}>Pin to Taskbar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+                <Text style={styles.appfloaterMenu}>Uninstall App</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.viewCloseFloater}>
+              <TouchableOpacity onPress={() => { setappFloaterData({appname: "", appcom: "", appbase: ""}) }} style={{display: "flex", width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                <Text style={styles.appfloaterMenu}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View style={{position: "absolute", top: 15, right: 5}}></View>
+        )}
         <View style={animStyles.viewAbsoluteWindow}>
           <View style={styles.flexedAbsoluteWindow}>
             <View style={styles.viewSearchBar}>
@@ -87,7 +134,7 @@ const Home = () => {
               <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
                 {appslist.map((apps, i) => {
                   return(
-                    <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }}>
+                    <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }} delayLongPress={1000} onLongPress={(evt) => { holdAppsOption(apps, evt) }}>
                       <View style={styles.viewAppsIndv}>
                         <Image source={{uri: "data:image/png;base64," + apps.replace(/\"/g, "").split(",")[2]}} style={styles.logoMenuStyle} />
                         <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.replace(/\"/g, "").split(",")[0]}</Text>
@@ -259,6 +306,60 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "white",
     height: 25
+  },
+  viewFloater:{
+    backgroundColor: "black",
+    width: "90%",
+    maxWidth: 150,
+    height: "70%",
+    maxHeight: 200,
+    position: "absolute",
+    top: 15,
+    right: 5,
+    borderRadius: 5,
+    opacity: 0.8,
+    borderWidth: 1,
+    borderColor: "#292929",
+    padding: 10,
+    zIndex: 3
+  },
+  viewFloaterTitle:{
+    backgroundColor: "transparent",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderColor: "#383838"
+  },
+  appFloaterLabelStyle:{
+    color: "white", 
+    backgroundColor: "transparent", 
+    width: 80, 
+    marginLeft: 5, 
+    height: 50,
+    textAlignVertical: "center",
+    fontSize: 13,
+    textAlign: "center"
+  },
+  iconAppFloat:{
+    width: 30,
+    height: 30
+  },
+  appfloaterMenu:{
+    color: "white",
+    fontSize: 13
+  },
+  viewCloseFloater:{
+    backgroundColor: "#292929",
+    justifyContent: "center",
+    height: 30,
+    alignItems: "center",
+    borderRadius: 5,
+    opacity: 0.9
+  },
+  appfloaterMenuMiddle:{
+    flex: 1,
+    width: "100%"
   }
 })
 
