@@ -24,7 +24,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.Base64;
 
-
 public class InstalledAppsModule extends ReactContextBaseJavaModule {
 
     private final ReactApplicationContext reactContext;

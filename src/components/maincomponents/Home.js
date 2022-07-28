@@ -7,7 +7,8 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_TASKBAR_APPS } from '../../redux/types';
+import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -25,9 +26,13 @@ const Home = () => {
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
   const [dateTimeWindow, setdateTimeWindow] = useState(false);
 
+  //enable scroll when taskbar apps are more than
+  const [taskbarscroll, settaskbarscroll] = useState(false);
+
   //const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: "", appstate: ""});
   const appFloaterData = useSelector(state => state.appfloater);
   const datetimedata = useSelector(state => state.datetimedata);
+  const taskbarapps = useSelector(state => state.taskbarapps);
 
   const dispatch = useDispatch()
 
@@ -231,7 +236,12 @@ const Home = () => {
       })
     }
     else{
-      removeAppfromHome();
+      if(stateprocess == "HomeTop"){
+        removeAppfromHome();
+      }
+      else{
+        addApptoHome("Adder")
+      }
     }
 
     //console.log(appFloaterData.appname)
@@ -318,11 +328,15 @@ const Home = () => {
                 arr.push(res.rows.item(i))
                 if(i+1 == res.rows.length){
                     // console.log(res.rows.item(i).bookName)
-                    //console.log(arr)
+                    // console.log(arr)
                     //setappShortcuts(arr);
                     dispatch({type: SET_APPS, apps: arr});
                 }
             }
+            if(res.rows.length == 0){
+              dispatch({type: SET_APPS, apps: arr});
+            }
+            //console.log(arr)
         },
         (error) => {
             if(Platform.OS === 'android'){
@@ -350,6 +364,175 @@ const Home = () => {
     //console.log(`${monthName} : ${date} : ${year}`)
   }
 
+  const openAppInfo = () => {
+    IntentLauncher.startActivity({
+      action: 'android.settings.APPLICATION_DETAILS_SETTINGS',
+      data: `package:${appFloaterData.appcom}`
+    })
+  }
+
+  const addApptoTaskbar = (stateprocess) => {
+    if(stateprocess == "Adder"){
+      db.transaction(txn => {
+        txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
+        [appFloaterData.appname, "Taskbar"],
+        (sqlTxn, res) => {
+          //console.log(res.rowsAffected)
+          if(res.rows.length == 0){
+            //addApptoHomeProceed()
+            //console.log("No App")
+            addApptoTaskbarProceed()
+          }
+          else{
+            if(Platform.OS === 'android'){
+              ToastAndroid.show("App already Pinned", ToastAndroid.SHORT)
+            }
+            else{
+                alert("App already Pinned")
+            }
+          }
+        },
+        (error) => {
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error scanning Taskbar", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error scanning Taskbar")
+          }
+        })
+      })
+    }
+    else{
+      //removeAppfromHome();
+      if(stateprocess == "Taskbar"){
+        //removeAppfromHome();
+        removeAppfromTaskbar()
+      }
+      else{
+        addApptoTaskbar("Adder")
+      }
+    }
+
+    //console.log(appFloaterData.appname)
+  }
+
+  const removeAppfromTaskbar = () => {
+    db.transaction(txn => {
+      txn.executeSql(`DELETE FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
+      [appFloaterData.appname, "Taskbar"],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show(`${appFloaterData.appname} was unpinned`, ToastAndroid.SHORT)
+          }
+          else{
+              alert(`${appFloaterData.appname} was unpinned`)
+          }
+          taskbarAppsInit();
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Cannot unpin from Taskbar", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Cannot unpin from Taskbar")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show("Taskbar unpin failed", ToastAndroid.SHORT)
+        }
+        else{
+            alert("Taskbar unpin failed")
+        }
+      })
+    })
+  }
+
+
+  const addApptoTaskbarProceed = () => {
+    db.transaction(txn => {
+      txn.executeSql(`INSERT INTO desktopShortcuts (appName, appCom, appBase, appCategory) VALUES (?,?,?,?)`,
+      [appFloaterData.appname, appFloaterData.appcom, appFloaterData.appbase, "Taskbar"],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show(`${appFloaterData.appname} pinned to Taskbar`, ToastAndroid.SHORT)
+          }
+          else{
+              alert(`${appFloaterData.appname} pinned to Taskbar`)
+          }
+          //homeAppsInit();
+          taskbarAppsInit()
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Cannot be pinned to Taskbar", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Cannot be pinned to Taskbar")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show("Cannot add to Home", ToastAndroid.SHORT)
+        }
+        else{
+            alert("Cannot add to Home")
+        }
+      })
+    })
+  }
+
+  useEffect(() => {
+    taskbarAppsInit()
+  },[])
+
+  const taskbarAppsInit = () => {
+    db.transaction(txn => {
+        txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appCategory = ?`,
+        ["Taskbar"],
+        (sqlTxn, res) => {
+            var arr = []
+            for(var i = 0; i < res.rows.length; i++){
+                // console.log(res.rows.length)
+                arr.push(res.rows.item(i))
+                if(i+1 == res.rows.length){
+                    // console.log(res.rows.item(i).bookName)
+                    //console.log(arr)
+                    //setappShortcuts(arr);
+                    dispatch({type: SET_TASKBAR_APPS, taskbarapps: arr});
+                }
+            }
+            if(res.rows.length == 0){
+              dispatch({type: SET_TASKBAR_APPS, taskbarapps: arr});
+            }
+        },
+        (error) => {
+            if(Platform.OS === 'android'){
+                ToastAndroid.show("Taskbar failed to Initalize", ToastAndroid.SHORT)
+            }
+            else{
+                  alert("Taskbar failed to Initalize")
+            }
+        })
+    })
+  }
+
+  const holdTaskAppsOption = (apps, evt, appstate) => {
+    var appName = apps.appName;
+    var appCom = apps.appCom
+    var appBase = apps.appBase
+
+    //setappFloaterData({appname: appName, appcom: appCom, appbase: appBase, appstate: appstate})
+    dispatch({type: SET_APP_FLOATER, appfloater: {appname: appName, appcom: appCom, appbase: appBase, appstate: appstate}})
+    // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
@@ -373,13 +556,13 @@ const Home = () => {
               <Text style={styles.appFloaterLabelStyle} numberOfLines={2}>{appFloaterData.appname}</Text>
             </View>
             <View style={styles.appfloaterMenuMiddle}>
-              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center", marginTop: 5}}>
+              <TouchableOpacity onPress={() => { openAppInfo() }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center", marginTop: 5}}>
                 <Text style={styles.appfloaterMenu}>App Info</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => { addApptoHome(appFloaterData.appstate) }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
                 <Text style={styles.appfloaterMenu}>{appFloaterData.appstate == "Adder"? "Add to Home" : appFloaterData.appstate == "HomeTop"? "Remove from Home" : "Add to Home"}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+              <TouchableOpacity onPress={() => { addApptoTaskbar(appFloaterData.appstate) }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
                 <Text style={styles.appfloaterMenu}>{appFloaterData.appstate == "Adder"? "Pin to Taskbar" : appFloaterData.appstate == "Taskbar"? "Remove from Taskbar" : "Pin to Taskbar"}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
@@ -431,9 +614,18 @@ const Home = () => {
               <Text style={{color: "white", fontSize: 10}}>Weather</Text>
             </View>
             <View style={styles.viewCenterTab}>
-              <TouchableOpacity onPress={() => { windowHideOpen() }}>
-                <Image source={LogoNeon} style={styles.logoMenuStyle} />
-              </TouchableOpacity>
+              <ScrollView style={{backgroundColor: "transparent", width: "100%", paddingTop: 0}} contentContainerStyle={{flexGrow: 1, flexDirection: "row", flexWrap: "wrap", justifyContent: "center"}} >
+                <TouchableOpacity style={{margin: 5}} onPress={() => { windowHideOpen() }}>
+                  <Image source={LogoNeon} style={styles.logoMenuStyle} />
+                </TouchableOpacity>
+                {taskbarapps.map((taskapps, i) => {
+                  return(
+                    <TouchableOpacity key={i} style={{margin: 5, width: 40, height: 40, justifyContent: "center", alignItems: "center"}} onPress={() => { openApp(taskapps.appCom) }} delayLongPress={500} onLongPress={(evt) => { holdTaskAppsOption(taskapps, evt, "Taskbar") }}>
+                      <Image source={{uri: "data:image/png;base64," + taskapps.appBase}} style={styles.logoTaskbarStyle} />
+                    </TouchableOpacity>
+                  )
+                })}
+              </ScrollView>
             </View>
             <View style={styles.viewCornerRightTabs}>
               <TouchableOpacity onPress={() => { dateTimeHideOpen(); }} style={{flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "transparent", width: "100%", height: "100%"}}>
@@ -518,6 +710,10 @@ const styles = StyleSheet.create({
   logoMenuStyle:{
     width: 40,
     height: 40
+  },
+  logoTaskbarStyle:{
+    width: 35,
+    height: 35
   },
   flexedAbsoluteWindow:{
     backgroundColor: "transparent",

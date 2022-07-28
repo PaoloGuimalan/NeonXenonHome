@@ -288,6 +288,8 @@ dependencies {
 
     implementation project(':react-native-sqlite-storage')
 
+    implementation project(':react-native-intent-launcher')
+
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
     }

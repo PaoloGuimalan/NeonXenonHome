@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
+import com.poberwong.launcher.IntentLauncherPackage;
 import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
@@ -14,6 +15,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import com.neonxenonhome.InstalledAppsModule;
+import com.poberwong.launcher.IntentLauncherPackage;
 
 public class MainApplication extends Application implements ReactApplication {
 

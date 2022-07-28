@@ -1,4 +1,4 @@
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA } from "../types";
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_TASKBAR_APPS } from "../types";
 
 export const setapps = (state = [], action) => {
     switch(action.type){
@@ -42,5 +42,14 @@ export const setdatetimedata = (state = datetimedatastate, action) => {
             return action.datetimedata;
         default:
             return state;
+    }
+}
+
+export const settaskbarapps = (state = [], action) => {
+    switch(action.type){
+        case SET_TASKBAR_APPS:
+            return action.taskbarapps;
+        default:
+            return state
     }
 }
