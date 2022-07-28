@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHa
 import React, { useState, useEffect } from 'react'
 import { openDatabase } from 'react-native-sqlite-storage'
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
+import { useDispatch, useSelector } from 'react-redux'
+import { SET_APPS, SET_APP_FLOATER } from '../../redux/types'
 
 const db = openDatabase({
     name: "neonxenonhomedb"
@@ -9,7 +11,10 @@ const db = openDatabase({
 
 const Desktop = () => {
 
-  const [appShortcuts, setappShortcuts] = useState([]);
+  //const [appShortcuts, setappShortcuts] = useState([]);
+
+  const appShortcuts = useSelector(state => state.apps);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     homeAppsInit()
@@ -27,7 +32,8 @@ const Desktop = () => {
                 if(i+1 == res.rows.length){
                     // console.log(res.rows.item(i).bookName)
                     //console.log(arr)
-                    setappShortcuts(arr);
+                    //setappShortcuts(arr);
+                    dispatch({type: SET_APPS, apps: arr});
                 }
             }
         },
@@ -51,13 +57,23 @@ const Desktop = () => {
     }
   }
 
+  const holdAppsOption = (apps, evt, appstate) => {
+    var appName = apps.appName;
+    var appCom = apps.appCom
+    var appBase = apps.appBase
+
+    //setappFloaterData({appname: appName, appcom: appCom, appbase: appBase, appstate: appstate})
+    dispatch({type: SET_APP_FLOATER, appfloater: {appname: appName, appcom: appCom, appbase: appBase, appstate: appstate}})
+    // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
+  }
+
   return (
     <View style={styles.mainView}>
         <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
             <View style={styles.viewShortcuts}>
                 {appShortcuts.map((apps, i) => {
                     return(
-                        <TouchableOpacity key={i} onPress={() => { openApp(apps.appCom) }}>
+                        <TouchableOpacity key={i} onPress={() => { openApp(apps.appCom) }} delayLongPress={500} onLongPress={(evt) => { holdAppsOption(apps, evt, "HomeTop") }}>
                             <View style={styles.viewAppsIndv}>
                                 <Image source={{uri: "data:image/png;base64," + apps.appBase}} style={styles.logoMenuStyle} />
                                 <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.appName}</Text>

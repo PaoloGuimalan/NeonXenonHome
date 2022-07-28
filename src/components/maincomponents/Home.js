@@ -1,11 +1,13 @@
-import { View, Text, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
 import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useDispatch, useSelector } from 'react-redux';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER } from '../../redux/types';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -15,13 +17,17 @@ const TabStack = createNativeStackNavigator();
 
 const Home = () => {
 
-  const [menuWindow, setmenuWindow] = useState(false);
+  //const [menuWindow, setmenuWindow] = useState(false);
+  const menuWindow = useSelector(state => state.appswindow);
   const [appslist, setappslist] = useState([]);
 
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
 
-  const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: ""});
+  //const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: "", appstate: ""});
+  const appFloaterData = useSelector(state => state.appfloater);
+
+  const dispatch = useDispatch()
 
   useEffect(() => {
     BackHandler.addEventListener('hardwareBackPress', function() {
@@ -62,6 +68,8 @@ const Home = () => {
     //setcurrentTime(`${hours} : ${minutes} : ${seconds}`);
   }
 
+  const [animVal, setanimVal] = useState(new Animated.Value(-400));
+
   const animStyles = StyleSheet.create({
     viewAbsoluteWindow:{
       backgroundColor: "black",
@@ -70,7 +78,7 @@ const Home = () => {
       height: "80%",
       maxHeight: 400,
       position: "absolute",
-      bottom: menuWindow? 60 : -400,
+      bottom: animVal,
       borderRadius: 5,
       opacity: 0.8,
       borderWidth: 1,
@@ -78,6 +86,46 @@ const Home = () => {
       zIndex: 2
     }
   })
+
+  useEffect(() => {
+    closeWindowApps()
+  },[])
+
+  const windowHideOpen = () => {
+    //setmenuWindow(!menuWindow)
+    if(menuWindow){
+      closeWindowApps()
+      //setmenuWindow(false);
+      dispatch({type: SET_APPS_WINDOW, appswindow: false})
+    }
+    else{
+      openWindowApps()
+      //setmenuWindow(true);
+      dispatch({type: SET_APPS_WINDOW, appswindow: true})
+    }
+  }
+
+  const openWindowApps = () => {
+    Animated.timing(
+      animVal,
+      {
+        toValue: 60,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start();
+  }
+
+  const closeWindowApps = () => {
+    Animated.timing(
+      animVal,
+      {
+        toValue: -400,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start();
+  }
 
   const openApp = (appdir) => {
     try{
@@ -88,44 +136,85 @@ const Home = () => {
     }
   }
 
-  const holdAppsOption = (apps, evt) => {
+  const holdAppsOption = (apps, evt, appstate) => {
     var appName = apps.replace(/\"/g, "").split(",")[0]
     var appCom = apps.replace(/\"/g, "").split(",")[1]
     var appBase = apps.replace(/\"/g, "").split(",")[2]
 
-    setappFloaterData({appname: appName, appcom: appCom, appbase: appBase})
+    //setappFloaterData({appname: appName, appcom: appCom, appbase: appBase, appstate: appstate})
+    dispatch({type: SET_APP_FLOATER, appfloater: {appname: appName, appcom: appCom, appbase: appBase, appstate: appstate}})
     // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
   }
 
-  const addApptoHome = () => {
+  const addApptoHome = (stateprocess) => {
+    if(stateprocess == "Adder"){
+      db.transaction(txn => {
+        txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
+        [appFloaterData.appname, "Home"],
+        (sqlTxn, res) => {
+          //console.log(res.rowsAffected)
+          if(res.rows.length == 0){
+            addApptoHomeProceed()
+          }
+          else{
+            if(Platform.OS === 'android'){
+              ToastAndroid.show("App already added", ToastAndroid.SHORT)
+            }
+            else{
+                alert("App already added")
+            }
+          }
+        },
+        (error) => {
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error scanning Home", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error scanning Home")
+          }
+        })
+      })
+    }
+    else{
+      removeAppfromHome();
+    }
+
+    //console.log(appFloaterData.appname)
+  }
+
+  const removeAppfromHome = () => {
     db.transaction(txn => {
-      txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
+      txn.executeSql(`DELETE FROM desktopShortcuts WHERE appName = ? AND appCategory = ?`,
       [appFloaterData.appname, "Home"],
       (sqlTxn, res) => {
-        //console.log(res.rowsAffected)
-        if(res.rows.length == 0){
-          addApptoHomeProceed()
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show(`${appFloaterData.appname} removed from Home`, ToastAndroid.SHORT)
+          }
+          else{
+              alert(`${appFloaterData.appname} removed from Home`)
+          }
+          homeAppsInit();
         }
         else{
           if(Platform.OS === 'android'){
-            ToastAndroid.show("App already added", ToastAndroid.SHORT)
+            ToastAndroid.show("Cannot remove from Home", ToastAndroid.SHORT)
           }
           else{
-              alert("App already added")
+              alert("Cannot remove from Home")
           }
         }
       },
       (error) => {
         if(Platform.OS === 'android'){
-          ToastAndroid.show("Error scanning Home", ToastAndroid.SHORT)
+          ToastAndroid.show("Cannot add to Home", ToastAndroid.SHORT)
         }
         else{
-            alert("Error scanning Home")
+            alert("Cannot add to Home")
         }
       })
     })
-
-    //console.log(appFloaterData.appname)
   }
 
   const addApptoHomeProceed = () => {
@@ -141,6 +230,7 @@ const Home = () => {
           else{
               alert(`${appFloaterData.appname} added to Home`)
           }
+          homeAppsInit();
         }
         else{
           if(Platform.OS === 'android'){
@@ -162,6 +252,34 @@ const Home = () => {
     })
   }
 
+  const homeAppsInit = () => {
+    db.transaction(txn => {
+        txn.executeSql(`SELECT * FROM desktopShortcuts WHERE appCategory = ?`,
+        ["Home"],
+        (sqlTxn, res) => {
+            var arr = []
+            for(var i = 0; i < res.rows.length; i++){
+                // console.log(res.rows.length)
+                arr.push(res.rows.item(i))
+                if(i+1 == res.rows.length){
+                    // console.log(res.rows.item(i).bookName)
+                    //console.log(arr)
+                    //setappShortcuts(arr);
+                    dispatch({type: SET_APPS, apps: arr});
+                }
+            }
+        },
+        (error) => {
+            if(Platform.OS === 'android'){
+                ToastAndroid.show("Home Shortcuts failed to Initalize", ToastAndroid.SHORT)
+            }
+            else{
+                  alert("Home Shortcuts failed to Initalize")
+            }
+        })
+    })
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
@@ -175,18 +293,18 @@ const Home = () => {
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center", marginTop: 5}}>
                 <Text style={styles.appfloaterMenu}>App Info</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => { addApptoHome() }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
-                <Text style={styles.appfloaterMenu}>Add to Home</Text>
+              <TouchableOpacity onPress={() => { addApptoHome(appFloaterData.appstate) }} style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
+                <Text style={styles.appfloaterMenu}>{appFloaterData.appstate == "Adder"? "Add to Home" : appFloaterData.appstate == "HomeTop"? "Remove from Home" : "Add to Home"}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
-                <Text style={styles.appfloaterMenu}>Pin to Taskbar</Text>
+                <Text style={styles.appfloaterMenu}>{appFloaterData.appstate == "Adder"? "Pin to Taskbar" : appFloaterData.appstate == "Taskbar"? "Remove from Taskbar" : "Pin to Taskbar"}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={{backgroundColor: "transparent", paddingLeft: 0,height: 20, justifyContent: "center", alignItems: "center"}}>
-                <Text style={styles.appfloaterMenu}>Uninstall App</Text>
+                <Text style={styles.appfloaterMenuUninstall}>Uninstall App</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.viewCloseFloater}>
-              <TouchableOpacity onPress={() => { setappFloaterData({appname: "", appcom: "", appbase: ""}) }} style={{display: "flex", width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+              <TouchableOpacity onPress={() => { dispatch({type: SET_APP_FLOATER, appfloater: {appname: "", appcom: "", appbase: "", appstate: ""}}) }} style={{display: "flex", width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
                 <Text style={styles.appfloaterMenu}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -194,7 +312,7 @@ const Home = () => {
         ) : (
           <View style={{position: "absolute", top: 15, right: 5}}></View>
         )}
-        <View style={animStyles.viewAbsoluteWindow}>
+        <Animated.View style={animStyles.viewAbsoluteWindow}>
           <View style={styles.flexedAbsoluteWindow}>
             <View style={styles.viewSearchBar}>
               <TextInput placeholder='Search an app' style={styles.searchInput} placeholderTextColor="grey" />
@@ -204,7 +322,7 @@ const Home = () => {
               <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
                 {appslist.map((apps, i) => {
                   return(
-                    <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }} delayLongPress={1000} onLongPress={(evt) => { holdAppsOption(apps, evt) }}>
+                    <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }} delayLongPress={500} onLongPress={(evt) => { holdAppsOption(apps, evt, "Adder") }}>
                       <View style={styles.viewAppsIndv}>
                         <Image source={{uri: "data:image/png;base64," + apps.replace(/\"/g, "").split(",")[2]}} style={styles.logoMenuStyle} />
                         <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.replace(/\"/g, "").split(",")[0]}</Text>
@@ -218,7 +336,7 @@ const Home = () => {
               <Text>...</Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
         <View style={styles.viewDesktop}>
           <TabStack.Navigator screenOptions={{headerShown: false}}>
             <TabStack.Screen name='Desktop' component={Desktop} />
@@ -230,7 +348,7 @@ const Home = () => {
               <Text style={{color: "white", fontSize: 10}}>Weather</Text>
             </View>
             <View style={styles.viewCenterTab}>
-              <TouchableOpacity onPress={() => { setmenuWindow(!menuWindow) }}>
+              <TouchableOpacity onPress={() => { windowHideOpen() }}>
                 <Image source={LogoNeon} style={styles.logoMenuStyle} />
               </TouchableOpacity>
             </View>
@@ -277,7 +395,8 @@ const styles = StyleSheet.create({
     backgroundColor: "black",
     opacity: 0.8,
     borderTopWidth: 1,
-    borderColor: "#292929"
+    borderColor: "#292929",
+    zIndex: 3
   },
   flexedTaskBar:{
     backgroundColor: "#0f0f0f",
@@ -421,6 +540,10 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 13
   },
+  appfloaterMenuUninstall:{
+    color: "red",
+    fontSize: 13
+  }, 
   viewCloseFloater:{
     backgroundColor: "#292929",
     justifyContent: "center",

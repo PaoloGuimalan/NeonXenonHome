@@ -32,6 +32,8 @@ import Splash from './src/components/maincomponents/Splash';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { openDatabase } from 'react-native-sqlite-storage'
+import { Provider } from 'react-redux';
+import store from './src/redux/store';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -137,12 +139,14 @@ const App: () => Node = () => {
   };
 
   return (
-    <NavigationContainer>
-      <StatusBar hidden={true} />
-      <MainStack.Navigator screenOptions={{cardStyle: { backgroundColor: 'black' }}}>
-        <MainStack.Screen name='Home' component={splashstatus? Splash : Home} options={{headerShown: false}} />
-      </MainStack.Navigator>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <StatusBar hidden={true} />
+        <MainStack.Navigator screenOptions={{cardStyle: { backgroundColor: 'black' }}}>
+          <MainStack.Screen name='Home' component={splashstatus? Splash : Home} options={{headerShown: false}} />
+        </MainStack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 };
 
