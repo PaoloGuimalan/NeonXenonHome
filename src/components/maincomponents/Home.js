@@ -7,7 +7,7 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA } from '../../redux/types';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -23,9 +23,11 @@ const Home = () => {
 
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
+  const [dateTimeWindow, setdateTimeWindow] = useState(false);
 
   //const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: "", appstate: ""});
   const appFloaterData = useSelector(state => state.appfloater);
+  const datetimedata = useSelector(state => state.datetimedata);
 
   const dispatch = useDispatch()
 
@@ -69,6 +71,7 @@ const Home = () => {
   }
 
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
+  const [animDT, setanimDT] = useState(new Animated.Value(-250));
 
   const animStyles = StyleSheet.create({
     viewAbsoluteWindow:{
@@ -84,11 +87,29 @@ const Home = () => {
       borderWidth: 1,
       borderColor: "#292929",
       zIndex: 2
+    },
+    viewAbsoluteDateTimeWindow:{
+      backgroundColor: "black",
+      position: "absolute",
+      width: "90%",
+      height: "90%",
+      zIndex: 1,
+      maxWidth: 200,
+      maxHeight: 100,
+      bottom: 60,
+      right: animDT,
+      borderRadius: 5,
+      opacity: 0.8,
+      borderWidth: 1,
+      borderColor: "#292929",
+      justifyContent: "center",
+      alignItems: "center"
     }
   })
 
   useEffect(() => {
     closeWindowApps()
+    closeDateTime()
   },[])
 
   const windowHideOpen = () => {
@@ -103,6 +124,40 @@ const Home = () => {
       //setmenuWindow(true);
       dispatch({type: SET_APPS_WINDOW, appswindow: true})
     }
+  }
+
+  const dateTimeHideOpen = () => {
+    if(dateTimeWindow){
+      closeDateTime()
+      setdateTimeWindow(false)
+    }
+    else{
+      dateTimeDataSetter();
+      openDateTime()
+      setdateTimeWindow(true)
+    }
+  }
+
+  const openDateTime = () => {
+    Animated.timing(
+      animDT,
+      {
+        toValue: 5,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start()
+  }
+
+  const closeDateTime = () => {
+    Animated.timing(
+      animDT,
+      {
+        toValue: -250,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start()
   }
 
   const openWindowApps = () => {
@@ -280,9 +335,37 @@ const Home = () => {
     })
   }
 
+  const dateTimeDataSetter = () => {
+    var today = new Date();
+    const monthNames = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthName = monthNames[today.getMonth()]
+    const date = today.getDate()
+    const year = today.getFullYear()
+    const dayName = days[today.getDay()]
+
+    dispatch({type: SET_DATE_TIME_DATA, datetimedata: { day: date, dayname: dayName, monthname: monthName, year: year }})
+    //console.log(`${monthName} : ${date} : ${year}`)
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
+        <Animated.View style={animStyles.viewAbsoluteDateTimeWindow}>
+          <View style={{backgroundColor: "transparent", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10}}>
+            <View style={{backgroundColor: "transparent", width: "30%", alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderColor: "#383838"}}>
+              <Text style={{color: "white", fontSize: 30}}>{datetimedata.day}</Text>
+              <Text style={{color: "white", fontSize: 12}}>{datetimedata.dayname}</Text>
+            </View>
+            <View style={{backgroundColor: "transparent", width: "70%", justifyContent: "center", alignItems: "center"}}>
+              <Text style={{color: "white", fontSize: 20}}>{datetimedata.monthname} {datetimedata.year}</Text>
+              <Text style={{color: "white", fontSize: 10}}>{currentDate}</Text>
+              <Text style={{color: "white", fontSize: 10}}>{currentTime}</Text>
+            </View>
+          </View>
+        </Animated.View>
         {appFloaterData.appname != ""? (
           <View style={styles.viewFloater}>
             <View style={styles.viewFloaterTitle}>
@@ -353,8 +436,10 @@ const Home = () => {
               </TouchableOpacity>
             </View>
             <View style={styles.viewCornerRightTabs}>
-              <Text style={{color: "white", fontSize: 10}}>{currentDate}</Text>
-              <Text style={{color: "white", fontSize: 10}}>{currentTime}</Text>
+              <TouchableOpacity onPress={() => { dateTimeHideOpen(); }} style={{flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "transparent", width: "100%", height: "100%"}}>
+                <Text style={{color: "white", fontSize: 10}}>{currentDate}</Text>
+                <Text style={{color: "white", fontSize: 10}}>{currentTime}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
