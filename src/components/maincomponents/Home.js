@@ -28,6 +28,7 @@ const Home = () => {
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
   const [dateTimeWindow, setdateTimeWindow] = useState(false);
   const [menuweatherWindow, setmenuweatherWindow] = useState(false);
+  const [menuweatherNewsWindowStatus, setmenuweatherNewsWindowStatus] = useState(false);
 
   //enable scroll when taskbar apps are more than
   const [taskbarscroll, settaskbarscroll] = useState(false);
@@ -169,14 +170,20 @@ const Home = () => {
 
   const menuWeatherHideOpen = () => {
     if(menuweatherWindow){
-      closeMenuWeather()
-      setmenuweatherWindow(false)
+      setmenuweatherNewsWindowStatus(false);
+      setTimeout(() => {
+        closeMenuWeather()
+        setmenuweatherWindow(false)
+      },1000)
     }
     else{
       weatherCatcher()
       newsDataFetch()
       openMenuWeather()
       setmenuweatherWindow(true)
+      setTimeout(() => {
+        setmenuweatherNewsWindowStatus(true);
+      },1000)
     }
   }
 
@@ -666,20 +673,24 @@ const Home = () => {
             </View>
             <View style={{backgroundColor: "transparent", width: "100%", padding: 5, paddingTop: 5}}>
               <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 15}}>News | {newsdata.numbers}</Text>
-              {newsdata.articles.map((newslist, i) => {
-                return(
-                  <TouchableOpacity onPress={() => { openLink(newslist.url) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
-                    <View style={{width: "100%"}}>
-                      <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
-                      <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
-                      <Text style={{fontSize: 10, color: "white", marginBottom: 5}} numberOfLines={1}>{newslist.author}</Text>
-                      <Image source={{uri: newslist.urlToImage}} style={{width: "100%", height: 150}} />
-                      <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "justify", marginTop: 5}} numberOfLines={4}>{newslist.description}</Text>
-                      <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "left"}} numberOfLines={1}>{newslist.publishedAt}</Text>
-                    </View>
-                  </TouchableOpacity>
-                )
-              })}
+              {menuweatherNewsWindowStatus? (
+                newsdata.articles.map((newslist, i) => {
+                  return(
+                    <TouchableOpacity onPress={() => { openLink(newslist.url) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
+                      <View style={{width: "100%"}}>
+                        <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
+                        <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
+                        <Text style={{fontSize: 10, color: "white", marginBottom: 5}} numberOfLines={1}>{newslist.author}</Text>
+                        <Image source={{uri: newslist.urlToImage}} style={{width: "100%", height: 150}} />
+                        <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "justify", marginTop: 5}} numberOfLines={4}>{newslist.description}</Text>
+                        <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "left"}} numberOfLines={1}>{newslist.publishedAt}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  )
+                })
+              ) : (
+                <View></View>
+              )}
             </View>
           </ScrollView>
         </Animated.View>
