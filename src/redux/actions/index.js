@@ -1,4 +1,4 @@
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_TASKBAR_APPS } from "../types";
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_NEWS_DATA, SET_TASKBAR_APPS, SET_WEATHER } from "../types";
 
 export const setapps = (state = [], action) => {
     switch(action.type){
@@ -51,5 +51,37 @@ export const settaskbarapps = (state = [], action) => {
             return action.taskbarapps;
         default:
             return state
+    }
+}
+
+export const weatherDataState = {
+    icon: "",
+    status: "No Data",
+    location: "No Data",
+    lastupdated: "",
+    temp_c: "N/A",
+    temp_f: "N/A"
+  }
+
+export const setweather = (state = weatherDataState, action) => {
+    switch(action.type){
+        case SET_WEATHER:
+            return action.weather;
+        default:
+            return state;
+    }
+}
+
+export const newsDataState = {
+    numbers: "No News",
+    articles: []
+}
+
+export const setnewsdata = (state = newsDataState, action) => {
+    switch(action.type){
+        case SET_NEWS_DATA:
+            return action.newsdata;
+        default:
+            return state;
     }
 }

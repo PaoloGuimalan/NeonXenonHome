@@ -4,3 +4,6 @@ export const SET_APP_FLOATER = 'SET_APP_FLOATER'
 export const SET_APPS_WINDOW = 'SET_APPS_WINDOW'
 
 export const SET_DATE_TIME_DATA = 'SET_DATE_TIME_DATA'
+
+export const SET_WEATHER = 'SET_WEATHER'
+export const SET_NEWS_DATA = 'SET_NEWS_DATA';

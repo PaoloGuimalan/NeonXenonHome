@@ -1,4 +1,4 @@
-import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules } from 'react-native'
+import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
@@ -7,8 +7,10 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_TASKBAR_APPS } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_NEWS_DATA, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
 import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
+import Axios from 'axios'
+import { newsDataState, weatherDataState } from '../../redux/actions';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -25,6 +27,7 @@ const Home = () => {
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
   const [currentTime, setcurrentTime] = useState("00 : 00 : 00");
   const [dateTimeWindow, setdateTimeWindow] = useState(false);
+  const [menuweatherWindow, setmenuweatherWindow] = useState(false);
 
   //enable scroll when taskbar apps are more than
   const [taskbarscroll, settaskbarscroll] = useState(false);
@@ -33,6 +36,8 @@ const Home = () => {
   const appFloaterData = useSelector(state => state.appfloater);
   const datetimedata = useSelector(state => state.datetimedata);
   const taskbarapps = useSelector(state => state.taskbarapps);
+  const weatherdata = useSelector(state => state.weather);
+  const newsdata = useSelector(state => state.newsdata);
 
   const dispatch = useDispatch()
 
@@ -77,6 +82,7 @@ const Home = () => {
 
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
   const [animDT, setanimDT] = useState(new Animated.Value(-250));
+  const [animMW, setanimMW] = useState(new Animated.Value(-350));
 
   const animStyles = StyleSheet.create({
     viewAbsoluteWindow:{
@@ -109,6 +115,24 @@ const Home = () => {
       borderColor: "#292929",
       justifyContent: "center",
       alignItems: "center"
+    },
+    viewWindowWeatherNews:{
+      backgroundColor: "black", 
+      width: "90%",
+      maxWidth: 300,
+      position: "absolute",
+      zIndex: 1,
+      height: "80%",
+      maxHeight: 500,
+      bottom: 60,
+      left: animMW,
+      borderRadius: 5,
+      opacity: 0.8,
+      borderWidth: 1,
+      borderColor: "#292929",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingBottom: 10
     }
   })
 
@@ -141,6 +165,41 @@ const Home = () => {
       openDateTime()
       setdateTimeWindow(true)
     }
+  }
+
+  const menuWeatherHideOpen = () => {
+    if(menuweatherWindow){
+      closeMenuWeather()
+      setmenuweatherWindow(false)
+    }
+    else{
+      weatherCatcher()
+      newsDataFetch()
+      openMenuWeather()
+      setmenuweatherWindow(true)
+    }
+  }
+
+  const openMenuWeather = () => {
+    Animated.timing(
+      animMW,
+      {
+        toValue: 5,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start()
+  }
+
+  const closeMenuWeather = () => {
+    Animated.timing(
+      animMW,
+      {
+        toValue: -350,
+        duration: 1000,
+        useNativeDriver: false
+      }
+    ).start()
   }
 
   const openDateTime = () => {
@@ -533,9 +592,97 @@ const Home = () => {
     // console.log(`${appName}: x: ${evt.nativeEvent.locationX}, y: ${evt.nativeEvent.locationY}`);
   }
 
+  useEffect(() => {
+    weatherCatcher();
+    newsDataFetch();
+  },[])
+
+  const weatherCatcher = () => {
+    Axios.get('http://api.weatherapi.com/v1/current.json?key=494c0f6d4c3f4b4b81b74942211108&q=Philippines&aqi=yes').then((response) => {
+      // alert("Hello");
+      // console.log(JSON.stringify(response.data, null, 4))
+      dispatch({type: SET_WEATHER, weather: {
+        icon: `https:${response.data.current.condition.icon}`,
+        status: response.data.current.condition.text,
+        location: `${response.data.location.name}, ${response.data.location.country}`,
+        lastupdated: response.data.current.last_updated,
+        temp_c: response.data.current.temp_c,
+        temp_f: response.data.current.temp_f
+      }})
+    }).catch((err) => {
+      dispatch({type: SET_WEATHER, weatherdata: weatherDataState})
+    })
+  }
+
+  const newsDataFetch = () => {
+    Axios.get('https://newsapi.org/v2/top-headlines?country=ph&apiKey=96219def7ceb4da9ac0b1e545caeba1e')
+    .then((response) => {
+      // console.log(response.data.status)
+      if(response.data.status == "ok"){
+        // console.log(response.data.totalResults)
+        dispatch({type: SET_NEWS_DATA, newsdata: {numbers: response.data.totalResults, articles: response.data.articles}})
+      }
+      else{
+        // console.log("Unable to fetch News")
+        dispatch({type: SET_NEWS_DATA, newsdata: newsDataState})
+      }
+    }).catch((err) => {
+      // console.log(err.message);
+      dispatch({type: SET_NEWS_DATA, newsdata: newsDataState})
+    })
+  }
+
+  const openLink = (url) => {
+    Linking.openURL(url)
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
+        <Animated.View style={animStyles.viewWindowWeatherNews}>
+          <View style={{backgroundColor: "transparent", paddingTop: 5, height: 40, borderBottomWidth: 1, borderColor: "#292929", justifyContent: "center", alignItems: "center", width: "100%"}}>
+            <Text style={{color: "white"}}>...</Text>
+          </View>
+          <ScrollView fadingEdgeLength={100} style={{backgroundColor: "transparent", flexGrow: 1, width: "100%", height: "100%", padding: 5}}>
+            <View style={{backgroundColor: "transparent", width: "100%", padding: 5, paddingTop: 10}}>
+              <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 5}}>Weather</Text>
+              <View style={{backgroundColor: "transparent", width: "100%", height: 80}}>
+                <View style={{backgroundColor: "transparent", flex: 1, width: "100%", height: "100%", flexDirection: "row", justifyContent: "center"}}>
+                  <View style={{backgroundColor: "transparent", width: "40%", height: "100%", justifyContent: "center", alignItems: "center", borderRightWidth: 1, borderColor: "#292929"}}>
+                    {weatherdata.icon != ""? (
+                      <Image source={{uri: weatherdata.icon}} style={{width: 50, height: 50, marginBottom: -10}} />
+                    ) : (
+                      <View></View>
+                    )}
+                    <Text style={{color: "white", fontSize: 10, width: "100%", textAlign: "center", height: 30, textAlignVertical: "center"}} numberOfLines={2}>{weatherdata.status}</Text>
+                  </View>
+                  <View style={{backgroundColor: "transparent", width: "60%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                    <Text style={{color: "white", fontSize: 12, fontWeight: "bold"}}>{weatherdata.location}</Text>
+                    <Text style={{color: "white", fontSize: 10}}>{weatherdata.lastupdated}</Text>
+                    <Text style={{color: "white", fontSize: 10}}>{weatherdata.temp_c} &#8451; | {weatherdata.temp_f} &#x2109;</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+            <View style={{backgroundColor: "transparent", width: "100%", padding: 5, paddingTop: 5}}>
+              <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 15}}>News | {newsdata.numbers}</Text>
+              {newsdata.articles.map((newslist, i) => {
+                return(
+                  <TouchableOpacity onPress={() => { openLink(newslist.url) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
+                    <View style={{width: "100%"}}>
+                      <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
+                      <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
+                      <Text style={{fontSize: 10, color: "white", marginBottom: 5}} numberOfLines={1}>{newslist.author}</Text>
+                      <Image source={{uri: newslist.urlToImage}} style={{width: "100%", height: 150}} />
+                      <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "justify", marginTop: 5}} numberOfLines={4}>{newslist.description}</Text>
+                      <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "left"}} numberOfLines={1}>{newslist.publishedAt}</Text>
+                    </View>
+                  </TouchableOpacity>
+                )
+              })}
+            </View>
+          </ScrollView>
+        </Animated.View>
         <Animated.View style={animStyles.viewAbsoluteDateTimeWindow}>
           <View style={{backgroundColor: "transparent", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10}}>
             <View style={{backgroundColor: "transparent", width: "30%", alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderColor: "#383838"}}>
@@ -611,7 +758,9 @@ const Home = () => {
         <View style={styles.viewTaskBar}>
           <View style={styles.flexedTaskBar}>
             <View style={styles.viewCornerTabs}>
-              <Text style={{color: "white", fontSize: 10}}>Weather</Text>
+              <TouchableOpacity onPress={() => { menuWeatherHideOpen() }} style={{backgroundColor: "transparent", flex: 1, height: "100%", width: "100%", justifyContent: "center", alignItems: "center"}}>
+                <IonIcon name='menu' size={20} color="white"/>
+              </TouchableOpacity>
             </View>
             <View style={styles.viewCenterTab}>
               <ScrollView style={{backgroundColor: "transparent", width: "100%", paddingTop: 0}} contentContainerStyle={{flexGrow: 1, flexDirection: "row", flexWrap: "wrap", justifyContent: "center"}} >
