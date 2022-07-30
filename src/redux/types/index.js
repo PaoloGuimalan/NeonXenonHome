@@ -7,3 +7,5 @@ export const SET_DATE_TIME_DATA = 'SET_DATE_TIME_DATA'
 
 export const SET_WEATHER = 'SET_WEATHER'
 export const SET_NEWS_DATA = 'SET_NEWS_DATA';
+
+export const SET_DRAGGABLE_WINDOW = 'SET_DRAGGABLE_WINDOW';

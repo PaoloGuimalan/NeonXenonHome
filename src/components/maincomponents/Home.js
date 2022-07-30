@@ -7,10 +7,13 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_NEWS_DATA, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
 import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
 import Axios from 'axios'
 import { newsDataState, weatherDataState } from '../../redux/actions';
+import { DragResizeBlock } from '../../libraries/drag-resize/index';
+import { WebView } from 'react-native-webview'
+import DraggableIndex from '../draggablecomponents/DraggableIndex';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -32,6 +35,10 @@ const Home = () => {
 
   //enable scroll when taskbar apps are more than
   const [taskbarscroll, settaskbarscroll] = useState(false);
+
+  // let arrComponents = [];
+  //const [arrComponents, setarrComponents] = useState([]);
+  const arrComponents = useSelector(state => state.draggablewindow);
 
   //const [appFloaterData, setappFloaterData] = useState({appname: "", appcom: "", appbase: "", appstate: ""});
   const appFloaterData = useSelector(state => state.appfloater);
@@ -93,7 +100,7 @@ const Home = () => {
       height: "80%",
       maxHeight: 400,
       position: "absolute",
-      bottom: animVal,
+      bottom: animVal, //animVal or 60
       borderRadius: 5,
       opacity: 0.8,
       borderWidth: 1,
@@ -643,9 +650,36 @@ const Home = () => {
     Linking.openURL(url)
   }
 
+  const openDraggable = (instanceRemark, label, component) => {
+    // arrComponents.push({
+    //   instance: instanceRemark,
+    //   component: <DraggableIndex label={label} component={component} />
+    // })
+    // setarrComponents([
+    //   ...arrComponents,
+    //   {
+    //   instance: instanceRemark,
+    //   component: <DraggableIndex label={label} component={component} />
+    // }])
+    dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: [
+        ...arrComponents,
+        {
+        instance: arrComponents.length + 1,
+        component: <DraggableIndex instance={arrComponents.length + 1} label={label} component={component} />
+      }]
+    })
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
+        {arrComponents.map((comps, i) => {
+          return(
+            <DragResizeBlock key={i}>
+              {comps.component}
+            </DragResizeBlock>
+          )
+        })}
         <Animated.View style={animStyles.viewWindowWeatherNews}>
           <View style={{backgroundColor: "transparent", paddingTop: 5, height: 40, borderBottomWidth: 1, borderColor: "#292929", justifyContent: "center", alignItems: "center", width: "100%"}}>
             <Text style={{color: "white"}}>...</Text>
@@ -757,7 +791,18 @@ const Home = () => {
               </ScrollView>
             </View>
             <View style={styles.viewBottomAbsoluteWindow}>
-              <Text>...</Text>
+              <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
+                <View style={{backgroundColor: "transparent", height: "100%", width: 50, justifyContent: "center", alignItems: "center"}}>
+                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", `Testing Component ${arrComponents.length + 1}`) }} style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                    <IonIcon name='settings' size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
+                <View style={{backgroundColor: "transparent", height: "100%", width: 50, justifyContent: "center", alignItems: "center"}}>
+                  <TouchableOpacity style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                    <Text style={{color: "white"}}>...</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           </View>
         </Animated.View>
@@ -904,7 +949,9 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 50,
     borderTopWidth: 1,
-    borderColor: "#292929"
+    borderColor: "#292929",
+    justifyContent: "center",
+    alignItems: "center"
   },
   viewAppsList:{
     flex: 1,
