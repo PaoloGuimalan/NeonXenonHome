@@ -7,13 +7,14 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
 import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
 import Axios from 'axios'
 import { newsDataState, weatherDataState } from '../../redux/actions';
 import { DragResizeBlock } from '../../libraries/drag-resize/index';
 import { WebView } from 'react-native-webview'
 import DraggableIndex from '../draggablecomponents/DraggableIndex';
+import Settings from '../windowcomponents/Settings';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -422,6 +423,38 @@ const Home = () => {
     })
   }
 
+  const PWAInit = () => {
+    db.transaction(txn => {
+        txn.executeSql(`SELECT * FROM PWAs WHERE pwaExtra = ?`,
+        ["Home"],
+        (sqlTxn, res) => {
+            var arr = []
+            for(var i = 0; i < res.rows.length; i++){
+                // console.log(res.rows.length)
+                arr.push(res.rows.item(i))
+                if(i+1 == res.rows.length){
+                    // console.log(res.rows.item(i).bookName)
+                    // console.log(arr)
+                    //setappShortcuts(arr);
+                    dispatch({type: SET_PWA_LIST, pwalist: arr});
+                }
+            }
+            if(res.rows.length == 0){
+              dispatch({type: SET_PWA_LIST, pwalist: arr});
+            }
+            //console.log(arr)
+        },
+        (error) => {
+            if(Platform.OS === 'android'){
+                ToastAndroid.show("PWA's failed to Initialize", ToastAndroid.SHORT)
+            }
+            else{
+                  alert("PWA's failed to Initialize")
+            }
+        })
+    })
+  }
+
   const dateTimeDataSetter = () => {
     var today = new Date();
     const monthNames = ["January", "February", "March", "April", "May", "June",
@@ -650,7 +683,7 @@ const Home = () => {
     Linking.openURL(url)
   }
 
-  const openDraggable = (instanceRemark, label, component) => {
+  const openDraggable = (instanceRemark, label, Component) => {
     // arrComponents.push({
     //   instance: instanceRemark,
     //   component: <DraggableIndex label={label} component={component} />
@@ -665,7 +698,7 @@ const Home = () => {
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
-        component: <DraggableIndex instance={arrComponents.length + 1} label={label} component={component} />
+        component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
       }]
     })
   }
@@ -793,7 +826,7 @@ const Home = () => {
             <View style={styles.viewBottomAbsoluteWindow}>
               <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
                 <View style={{backgroundColor: "transparent", height: "100%", width: 50, justifyContent: "center", alignItems: "center"}}>
-                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", `Testing Component ${arrComponents.length + 1}`) }} style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings />) }} style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
                     <IonIcon name='settings' size={20} color="white" />
                   </TouchableOpacity>
                 </View>

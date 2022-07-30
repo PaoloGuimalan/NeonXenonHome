@@ -1,5 +1,5 @@
 import { createStore, combineReducers } from 'redux'
-import { setappfloater, setapps, setappswindow, setdatetimedata, setdraggablewindow, setnewsdata, settaskbarapps, setweather } from '../actions'
+import { setappfloater, setapps, setappswindow, setdatetimedata, setdraggablewindow, setnewsdata, setpwalist, settaskbarapps, setweather } from '../actions'
 
 const combiner = combineReducers({
     apps: setapps,
@@ -9,7 +9,8 @@ const combiner = combineReducers({
     taskbarapps: settaskbarapps,
     weather: setweather,
     newsdata: setnewsdata,
-    draggablewindow: setdraggablewindow
+    draggablewindow: setdraggablewindow,
+    pwalist: setpwalist
 })
 
 const store = createStore(combiner);

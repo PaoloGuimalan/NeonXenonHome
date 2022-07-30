@@ -6,7 +6,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons'
 import { useDispatch, useSelector } from 'react-redux';
 import { SET_DRAGGABLE_WINDOW } from '../../redux/types';
 
-const DraggableIndex = ({instance, label, component}) => {
+const DraggableIndex = ({instance, label, Component}) => {
  
   const arrComponents = useSelector(state => state.draggablewindow);
   const dispatch = useDispatch();
@@ -34,9 +34,9 @@ const DraggableIndex = ({instance, label, component}) => {
                 </TouchableOpacity>
             </View>
           </View>
-          <View style={{backgroundColor: "white", width: "100%", height: "100%"}}>
+          <View style={{backgroundColor: "transparent", width: "100%", height: "100%"}}>
             {/* <WebView source={{uri: 'https://vscode.dev/'}} userAgent="Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3714.0 Mobile Safari/537.36" /> */}
-            <Text>{component}</Text>
+            {Component}
           </View>
         </View>
       </View>

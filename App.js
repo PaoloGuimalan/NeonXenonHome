@@ -81,6 +81,7 @@ const App: () => Node = () => {
     //   setsplashstatus(false);
     // }, 4000)
     initializeDatabase()
+    //createPWATables()
   },[])
 
   const initializeDatabase = () => {
@@ -89,6 +90,7 @@ const App: () => Node = () => {
         // console.log(res.rows.length)
         if(res.rows.length == 0){
           createTables();
+          createPWATables();
           setTimeout(() => {
             setsplashstatus(false);
           }, 4000)
@@ -115,6 +117,33 @@ const App: () => Node = () => {
     db.transaction(txn => {
       txn.executeSql(
         `CREATE TABLE IF NOT EXISTS desktopShortcuts (id INTEGER PRIMARY KEY AUTOINCREMENT, appName VARCHAR(20), appCom TEXT, appBase BLOB, appCategory TEXT)`,
+        [],
+        (sqlTxn, res) => {
+          // console.log("table created successfully");
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Desktop Initialized", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Desktop Initialized")
+          }
+        },
+        error => {
+          console.log("error on creating table " + error.message);
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error Creating Database!", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error Creating Database!")
+          }
+        },
+      );
+    });
+  };
+
+  const createPWATables = () => {
+    db.transaction(txn => {
+      txn.executeSql(
+        `CREATE TABLE IF NOT EXISTS PWAs (id INTEGER PRIMARY KEY AUTOINCREMENT, pwaName VARCHAR(20), pwaUrl TEXT, pwaIcon BLOB, pwaExtra TEXT)`,
         [],
         (sqlTxn, res) => {
           // console.log("table created successfully");
