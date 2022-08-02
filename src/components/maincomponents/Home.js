@@ -1,4 +1,4 @@
-import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking } from 'react-native'
+import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
@@ -114,7 +114,7 @@ const Home = () => {
       width: "90%",
       height: "90%",
       zIndex: 1,
-      maxWidth: 200,
+      maxWidth: 230,
       maxHeight: 100,
       bottom: 60,
       right: animDT,
@@ -134,7 +134,7 @@ const Home = () => {
       height: "80%",
       maxHeight: 500,
       bottom: 60,
-      left: animMW,
+      left: animMW, //animMW
       borderRadius: 5,
       opacity: 0.8,
       borderWidth: 1,
@@ -183,6 +183,8 @@ const Home = () => {
         closeMenuWeather()
         setmenuweatherWindow(false)
       },1000)
+      // closeMenuWeather()
+      // setmenuweatherWindow(false)
     }
     else{
       weatherCatcher()
@@ -192,6 +194,7 @@ const Home = () => {
       setTimeout(() => {
         setmenuweatherNewsWindowStatus(true);
       },1000)
+      // setmenuweatherNewsWindowStatus(true);
     }
   }
 
@@ -717,6 +720,52 @@ const Home = () => {
           <View style={{backgroundColor: "transparent", paddingTop: 5, height: 40, borderBottomWidth: 1, borderColor: "#292929", justifyContent: "center", alignItems: "center", width: "100%"}}>
             <Text style={{color: "white"}}>...</Text>
           </View>
+          {/* <FlatList
+            removeClippedSubviews
+            initialNumToRender={5}
+            ListHeaderComponent={() => (
+              <View style={{backgroundColor: "transparent", width: "100%", padding: 5, paddingTop: 10}}>
+                <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 5}}>Weather</Text>
+                <View style={{backgroundColor: "transparent", width: "100%", height: 80}}>
+                  <View style={{backgroundColor: "transparent", flex: 1, width: "100%", height: "100%", flexDirection: "row", justifyContent: "center"}}>
+                    <View style={{backgroundColor: "transparent", width: "40%", height: "100%", justifyContent: "center", alignItems: "center", borderRightWidth: 1, borderColor: "#292929"}}>
+                      {weatherdata.icon != ""? (
+                        <Image source={{uri: weatherdata.icon}} style={{width: 50, height: 50, marginBottom: -10}} />
+                      ) : (
+                        <View></View>
+                      )}
+                      <Text style={{color: "white", fontSize: 10, width: "100%", textAlign: "center", height: 30, textAlignVertical: "center"}} numberOfLines={2}>{weatherdata.status}</Text>
+                    </View>
+                    <View style={{backgroundColor: "transparent", width: "60%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                      <Text style={{color: "white", fontSize: 12, fontWeight: "bold"}}>{weatherdata.location}</Text>
+                      <Text style={{color: "white", fontSize: 10}}>{weatherdata.lastupdated}</Text>
+                      <Text style={{color: "white", fontSize: 10}}>{weatherdata.temp_c} &#8451; | {weatherdata.temp_f} &#x2109;</Text>
+                    </View>
+                  </View>
+                </View>
+                <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 15}}>News | {newsdata.numbers}</Text>
+              </View>
+            )}
+            style={{backgroundColor: "transparent", flexGrow: 1, width: "100%", height: "100%", padding: 5}}
+            data={newsdata.articles}
+            keyExtractor={(data) => `${data.title}${data.publishedAt}`}
+            renderItem={({item}) => (
+              <TouchableOpacity onPress={() => { openLink(item.url) }} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
+                <View style={{width: "100%"}}>
+                  <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{item.title}</Text>
+                  <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{item.source.name}</Text>
+                  <Text style={{fontSize: 10, color: "white", marginBottom: 5}} numberOfLines={1}>{item.author}</Text>
+                  {item.urlToImage? (
+                    <Image source={{uri: item.urlToImage}} style={{width: "100%", height: 150}} />
+                  ) : (
+                    <View></View>
+                  )}
+                  <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "justify", marginTop: 5}} numberOfLines={4}>{item.description}</Text>
+                  <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "left"}} numberOfLines={1}>{item.publishedAt}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          /> */}
           <ScrollView fadingEdgeLength={100} style={{backgroundColor: "transparent", flexGrow: 1, width: "100%", height: "100%", padding: 5}}>
             <View style={{backgroundColor: "transparent", width: "100%", padding: 5, paddingTop: 10}}>
               <Text style={{color: "white", fontSize: 15, fontWeight: "bold", marginBottom: 5}}>Weather</Text>
@@ -748,7 +797,11 @@ const Home = () => {
                         <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
                         <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
                         <Text style={{fontSize: 10, color: "white", marginBottom: 5}} numberOfLines={1}>{newslist.author}</Text>
-                        <Image source={{uri: newslist.urlToImage}} style={{width: "100%", height: 150}} />
+                        {newslist.urlToImage? (
+                          <Image source={{uri: newslist.urlToImage}} style={{width: "100%", height: 150}} />
+                        ) : (
+                          <View></View>
+                        )}
                         <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "justify", marginTop: 5}} numberOfLines={4}>{newslist.description}</Text>
                         <Text style={{fontSize: 10, color: "white", marginBottom: 5, textAlign: "left"}} numberOfLines={1}>{newslist.publishedAt}</Text>
                       </View>
