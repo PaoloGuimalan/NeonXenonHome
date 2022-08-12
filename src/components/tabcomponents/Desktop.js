@@ -111,6 +111,7 @@ const Desktop = () => {
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
+        maximized: false,
         component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
       }]
     })
@@ -121,6 +122,7 @@ const Desktop = () => {
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
+        maximized: false,
         component: <DraggableIndex instance={arrComponents.length + 1} label={`${name} Info`} Component={Component} />
       }]
     })

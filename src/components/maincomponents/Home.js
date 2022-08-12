@@ -701,6 +701,7 @@ const Home = () => {
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
+        maximized: false,
         component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
       }]
     })
@@ -711,7 +712,7 @@ const Home = () => {
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
         {arrComponents.map((comps, i) => {
           return(
-            <DragResizeBlock key={i}>
+            <DragResizeBlock key={i} maxWindow={comps.maximized}>
               {comps.component}
             </DragResizeBlock>
           )

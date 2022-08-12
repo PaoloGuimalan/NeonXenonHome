@@ -40,7 +40,7 @@ export class DragResizeBlock extends Component {
       w,
       h,
       minW,
-      minH,
+      minH
     } = props;
 
     this.state = {
@@ -655,6 +655,7 @@ export class DragResizeBlock extends Component {
   renderConnectors = () => {
     const {
       connectors,
+      maxWindow
     } = this.props;
 
     const {
@@ -673,9 +674,20 @@ export class DragResizeBlock extends Component {
           onStart={this.connectorsMap[connectorType].onStart}
           onMove={this.connectorsMap[connectorType].onMove}
           onEnd={this.connectorsMap[connectorType].onEnd}
+          maxWindow={maxWindow}
         />
       );
     });
+  }
+
+  componentDidMount(){
+    Dimensions.addEventListener('change', ({window:{width, height}}) => {
+      this.setState(() => {
+        return {
+          isSelected: false
+        }
+      })
+    })
   }
 
   render() {
@@ -683,7 +695,29 @@ export class DragResizeBlock extends Component {
       children,
       isDisabled,
       zIndex,
+      maxWindow
     } = this.props;
+
+    this.dimensionState = {
+      widthState: Dimensions.get("window").width + 18,
+      heightState: Dimensions.get("window").height - 33
+    }
+
+    // Dimensions.addEventListener('change', ({window:{width, height}}) => {
+    //   //alert("Okay");
+    //   // this.renderConnectors(maxWindow)
+    //   // this.onPress
+    //   // this.setState(() => {
+    //   //   return {
+    //   //     isSelected: true,
+    //   //   };
+    //   // });
+    //   this.setState(() => {
+    //     return {
+    //       isSelected: false
+    //     }
+    //   })
+    // })
 
     const {
       x,
@@ -697,10 +731,10 @@ export class DragResizeBlock extends Component {
       <View
         style={{
           position: 'absolute',
-          left: x,
-          top: y,
-          width: w,
-          height: h,
+          left: maxWindow? 0 - 9 : x, //default position when max
+          top: maxWindow? 0 - 9 : y, //default position when max
+          width: maxWindow? this.dimensionState.widthState : w, //window sizing
+          height: maxWindow? this.dimensionState.heightState : h, //window sizing
           padding: CONNECTOR_SIZE / 2,
           zIndex: isSelected ? zIndex + 1 : zIndex
         }}
@@ -718,7 +752,7 @@ export class DragResizeBlock extends Component {
           </View>
         </TouchableWithoutFeedback>
 
-        {isDisabled ? null : this.renderConnectors()}
+        {isDisabled ? null : this.renderConnectors(maxWindow)}
 
       </View>
     );
