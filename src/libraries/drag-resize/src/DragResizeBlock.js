@@ -671,9 +671,9 @@ export class DragResizeBlock extends Component {
           size={connectorType == "c"? CONNECTOR_SIZE : CONNECTOR_SIZE}
           x={connectorType == "c"? this.connectorsMap[connectorType].calculateX(w) : this.connectorsMap[connectorType].calculateX(w) }
           y={connectorType == "c"? this.connectorsMap[connectorType].calculateX(h) : this.connectorsMap[connectorType].calculateY(h)}
-          onStart={this.connectorsMap[connectorType].onStart}
-          onMove={this.connectorsMap[connectorType].onMove}
-          onEnd={this.connectorsMap[connectorType].onEnd}
+          onStart={maxWindow? function(){return;} : this.connectorsMap[connectorType].onStart}
+          onMove={maxWindow? function(){return;} : this.connectorsMap[connectorType].onMove}
+          onEnd={maxWindow? function(){return;} : this.connectorsMap[connectorType].onEnd}
           maxWindow={maxWindow}
         />
       );

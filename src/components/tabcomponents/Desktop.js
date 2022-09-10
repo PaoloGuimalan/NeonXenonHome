@@ -142,7 +142,7 @@ const Desktop = () => {
                         </TouchableOpacity>
                     )
                 })}
-                {pwalist.map((apps, i) => {
+                {/* {pwalist.map((apps, i) => {
                     return(
                         <TouchableOpacity key={i} onPress={() => { openPWA(apps.pwaName, <WebPWA label={apps.pwaName} urlPWA={apps.pwaUrl} />) }} delayLongPress={500} onLongPress={(evt) => { holdPWAOption(apps.id, apps.pwaName, <PWAInfo id={apps.id} name={apps.pwaName} icon={PWAIcon} />) }}>
                             <View style={styles.viewAppsIndv}>
@@ -151,7 +151,7 @@ const Desktop = () => {
                             </View>
                         </TouchableOpacity>
                     )
-                })}
+                })} */}
             </View>
         </ImageBackground>
     </View>

@@ -15,6 +15,9 @@ import { DragResizeBlock } from '../../libraries/drag-resize/index';
 import { WebView } from 'react-native-webview'
 import DraggableIndex from '../draggablecomponents/DraggableIndex';
 import Settings from '../windowcomponents/Settings';
+import WebPWA from '../windowcomponents/WebPWA';
+import PWAIcon from '../../resources/imgs/pwaIcon.png'
+import PWAInfo from '../windowcomponents/PWAInfo'
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -26,6 +29,7 @@ const Home = () => {
 
   //const [menuWindow, setmenuWindow] = useState(false);
   const menuWindow = useSelector(state => state.appswindow);
+  const pwalist = useSelector(state => state.pwalist);
   const [appslist, setappslist] = useState([]);
 
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
@@ -36,6 +40,7 @@ const Home = () => {
 
   //enable scroll when taskbar apps are more than
   const [taskbarscroll, settaskbarscroll] = useState(false);
+  const [appdrawer, setappdrawer] = useState("Apps");
 
   // let arrComponents = [];
   //const [arrComponents, setarrComponents] = useState([]);
@@ -707,6 +712,28 @@ const Home = () => {
     })
   }
 
+  const openPWA = (label, Component) => {
+    dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: [
+        ...arrComponents,
+        {
+        instance: arrComponents.length + 1,
+        maximized: false,
+        component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
+      }]
+    })
+  }
+
+  const holdPWAOption = (id, name, Component) => {
+    dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: [
+        ...arrComponents,
+        {
+        instance: arrComponents.length + 1,
+        maximized: false,
+        component: <DraggableIndex instance={arrComponents.length + 1} label={`${name} Info`} Component={Component} />
+      }]
+    })
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
@@ -863,19 +890,45 @@ const Home = () => {
               <TextInput placeholder='Search an app' style={styles.searchInput} placeholderTextColor="grey" />
             </View>
             <View style={styles.viewAppsList}>
-              <Text style={{color: "white", marginLeft: "5%", marginTop: 5, marginBottom: 5}}>Apps</Text>
-              <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
-                {appslist.map((apps, i) => {
-                  return(
-                    <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }} delayLongPress={500} onLongPress={(evt) => { holdAppsOption(apps, evt, "Adder") }}>
-                      <View style={styles.viewAppsIndv}>
-                        <Image source={{uri: "data:image/png;base64," + apps.replace(/\"/g, "").split(",")[2]}} style={styles.logoMenuStyle} />
-                        <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.replace(/\"/g, "").split(",")[0]}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  )
-                })}
-              </ScrollView>
+                <View style={{flex: 1}}>
+                  <View style={{width: "100%", backgroundColor: "transparent", height: 40}}>
+                    <View style={{flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center"}}>
+                      <TouchableOpacity onPress={() => { setappdrawer("Apps") }} style={{opacity: 0.9, height: "90%", borderRadius: 5, backgroundColor: appdrawer == "Apps"? "grey" : "transparent", width: 80, alignItems: "center", margin: 2, justifyContent: "center"}}>
+                        <Text style={{fontWeight: "bold", color: "white", marginLeft: "5%", marginTop: 5, marginBottom: 5, textAlignVertical: "center"}}>Apps</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => { setappdrawer("PWA") }} style={{opacity: 0.9, height: "90%", borderRadius: 5, backgroundColor: appdrawer == "PWA"? "grey" : "transparent", width: 80, alignItems: "center", margin: 2, justifyContent: "center"}}>
+                        <Text style={{fontWeight: "bold", color: "white", marginLeft: "5%", marginTop: 5, marginBottom: 5, textAlignVertical: "center"}}>PWA</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  {appdrawer == "Apps"? (
+                    <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
+                      {appslist.map((apps, i) => {
+                        return(
+                          <TouchableOpacity key={i} onPress={() => { openApp(apps.replace(/\"/g, "").split(",")[1]) }} delayLongPress={500} onLongPress={(evt) => { holdAppsOption(apps, evt, "Adder") }}>
+                            <View style={styles.viewAppsIndv}>
+                              <Image source={{uri: "data:image/png;base64," + apps.replace(/\"/g, "").split(",")[2]}} style={styles.logoMenuStyle} />
+                              <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.replace(/\"/g, "").split(",")[0]}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        )
+                      })}
+                    </ScrollView>
+                  ) : (
+                    <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
+                      {pwalist.map((apps, i) => {
+                        return(
+                          <TouchableOpacity key={i} onPress={() => { openPWA(apps.pwaName, <WebPWA label={apps.pwaName} urlPWA={apps.pwaUrl} />) }} delayLongPress={500} onLongPress={(evt) => { holdPWAOption(apps.id, apps.pwaName, <PWAInfo id={apps.id} name={apps.pwaName} icon={PWAIcon} />) }}>
+                            <View style={styles.viewAppsIndv}>
+                                <Image source={PWAIcon} style={styles.logoMenuStyle} />
+                                <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.pwaName}</Text>
+                            </View>
+                          </TouchableOpacity>
+                        )
+                      })}
+                    </ScrollView>
+                  )}
+                </View>
             </View>
             <View style={styles.viewBottomAbsoluteWindow}>
               <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
