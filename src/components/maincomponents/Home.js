@@ -1,6 +1,7 @@
 import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
+import AntIcon from 'react-native-vector-icons/AntDesign'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
 import Desktop from '../tabcomponents/Desktop';
@@ -97,6 +98,8 @@ const Home = () => {
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
   const [animDT, setanimDT] = useState(new Animated.Value(-250));
   const [animMW, setanimMW] = useState(new Animated.Value(-350));
+
+  const [appMenuMiniDrawer, setappMenuMiniDrawer] = useState(false);
 
   const animStyles = StyleSheet.create({
     viewAbsoluteWindow:{
@@ -734,6 +737,10 @@ const Home = () => {
     })
   }
 
+  const openDrawerOptions = () => {
+    setappMenuMiniDrawer(!appMenuMiniDrawer);
+  }
+
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
@@ -885,13 +892,29 @@ const Home = () => {
           <View style={{position: "absolute", top: 15, right: 5}}></View>
         )}
         <Animated.View style={animStyles.viewAbsoluteWindow}>
+          <View style={{borderColor: "grey", borderWidth: appMenuMiniDrawer? 1 : 0, borderRadius: 5, backgroundColor: "black", width: "100%", maxWidth: 120, height: appMenuMiniDrawer? "100%" : 0, maxHeight: 100, position: "absolute", zIndex: 1, bottom: 5, left: 100}}>
+            <ScrollView style={{backgroundColor: "transparent"}} contentContainerStyle={{flexGrow: 1, justifyContent: "center", alignItems: "center"}}>
+              <TouchableOpacity onPress={() => { setappdrawer("Apps") }} style={{backgroundColor: "transparent", width: "100%", paddingTop: 5, paddingBottom: 5}}>
+                <View style={{backgroundColor: "transparent", flex: 1, flexDirection: "row", height: "100%", justifyContent: "flex-start", paddingLeft: 25}}>
+                  <IonIcon name='apps' size={20} color="white" />
+                  <Text style={{color: "white", fontSize: 13, textAlign: "center", textAlignVertical: "center", paddingLeft: 10}}>Apps</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setappdrawer("PWA") }} style={{backgroundColor: "transparent", width: "100%", paddingTop: 5, paddingBottom: 5}}>
+                <View style={{backgroundColor: "transparent", flex: 1, flexDirection: "row", height: "100%", justifyContent: "flex-start", paddingLeft: 25}}>
+                  <IonIcon name='logo-pwa' size={20} color="white" />
+                  <Text style={{color: "white", fontSize: 13, textAlign: "center", textAlignVertical: "center", paddingLeft: 10}}>PWA</Text>
+                </View>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
           <View style={styles.flexedAbsoluteWindow}>
             <View style={styles.viewSearchBar}>
               <TextInput placeholder='Search an app' style={styles.searchInput} placeholderTextColor="grey" />
             </View>
             <View style={styles.viewAppsList}>
                 <View style={{flex: 1}}>
-                  <View style={{width: "100%", backgroundColor: "transparent", height: 40}}>
+                  {/* <View style={{width: "100%", backgroundColor: "transparent", height: 40}}>
                     <View style={{flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center"}}>
                       <TouchableOpacity onPress={() => { setappdrawer("Apps") }} style={{opacity: 0.9, height: "90%", borderRadius: 5, backgroundColor: appdrawer == "Apps"? "grey" : "transparent", width: 80, alignItems: "center", margin: 2, justifyContent: "center"}}>
                         <Text style={{fontWeight: "bold", color: "white", marginLeft: "5%", marginTop: 5, marginBottom: 5, textAlignVertical: "center"}}>Apps</Text>
@@ -900,7 +923,8 @@ const Home = () => {
                         <Text style={{fontWeight: "bold", color: "white", marginLeft: "5%", marginTop: 5, marginBottom: 5, textAlignVertical: "center"}}>PWA</Text>
                       </TouchableOpacity>
                     </View>
-                  </View>
+                  </View> */}
+                  <Text style={{color: "white", paddingLeft: "5%", marginBottom: 5, marginTop: 5, fontSize: 13}}>{appdrawer}</Text>
                   {appdrawer == "Apps"? (
                     <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
                       {appslist.map((apps, i) => {
@@ -932,9 +956,12 @@ const Home = () => {
             </View>
             <View style={styles.viewBottomAbsoluteWindow}>
               <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
-                <View style={{backgroundColor: "transparent", height: "100%", width: 50, justifyContent: "center", alignItems: "center"}}>
-                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings />) }} style={{width: "100%", height: "100%", justifyContent: "center", alignItems: "center"}}>
+                <View style={{backgroundColor: "transparent", height: "100%", width: 100, justifyContent: "center", alignItems: "center", flexDirection: "row"}}>
+                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings />) }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
                     <IonIcon name='settings' size={20} color="white" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { openDrawerOptions() }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
+                    <AntIcon name={appMenuMiniDrawer? 'close' : 'right'} size={20} color="white" />
                   </TouchableOpacity>
                 </View>
                 <View style={{backgroundColor: "transparent", height: "100%", width: 50, justifyContent: "center", alignItems: "center"}}>
