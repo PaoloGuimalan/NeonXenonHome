@@ -6,9 +6,19 @@ import IonIcon from 'react-native-vector-icons/Ionicons'
 const WebPWA = ({label, urlPWA}) => {
 
   const [errorStatus, seterrorStatus] = useState(false);
+  const [desktopMode, setdesktopMode] = useState(false);
+
+  // const webRef = useRef();
+
+  const switchMode = (modebool) => {
+    setdesktopMode(!modebool);
+  }
 
   return (
     <View style={styles.mainView}>
+      <TouchableOpacity onPress={() => { switchMode(desktopMode) }} style={{backgroundColor: "black", width: "50%", justifyContent: "center", alignItems: 'center', height: 30, position: "absolute", zIndex: 1, alignSelf: "center", borderRadius: 5, borderWidth: 1, borderColor: "grey"}}>
+        <Text style={{color: "white"}}>{desktopMode? "Desktop" : "Mobile"}</Text>
+      </TouchableOpacity>
       {errorStatus? (
         <View style={{width: "100%", height: "100%", flex: 1, justifyContent: "center", alignItems: "center"}}>
             <ScrollView style={{width: "100%", height: "100%"}} contentContainerStyle={{flexGrow: 1, justifyContent: "center", alignItems: "center"}}>
@@ -18,10 +28,13 @@ const WebPWA = ({label, urlPWA}) => {
             </ScrollView>
         </View>
       ) : (
-        <WebView 
+        <WebView
+            // ref={(ref) => { webRef.current = ref }} 
+            key={desktopMode}
             nestedScrollEnabled={true} 
             source={{uri: urlPWA}} 
-            userAgent="Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3714.0 Mobile Safari/537.36" 
+            // userAgent="Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0"
+            userAgent={desktopMode? "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0" : "Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3714.0 Mobile Safari/537.36"} 
             onError={(e) => {
                 // console.log(true);
                 seterrorStatus(true);
