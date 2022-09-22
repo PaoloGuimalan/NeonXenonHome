@@ -1,4 +1,4 @@
-import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList } from 'react-native'
+import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList, PermissionsAndroid } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import AntIcon from 'react-native-vector-icons/AntDesign'
@@ -739,6 +739,25 @@ const Home = () => {
 
   const openDrawerOptions = () => {
     setappMenuMiniDrawer(!appMenuMiniDrawer);
+  }
+
+  useEffect(() => {
+    checkPermision();
+  },[])
+
+  async function checkPermision(){
+    await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+    ]).then((result) => {
+      if(Platform.OS === 'android'){
+        ToastAndroid.show(`Permision granted`, ToastAndroid.SHORT)
+        // console.log(result)
+      }
+      else{
+            alert(`Permision granted`)
+      }
+    })
   }
 
   return (

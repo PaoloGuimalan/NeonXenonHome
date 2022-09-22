@@ -83,7 +83,7 @@ const PWAInfo = ({id, name, icon}) => {
 
   return (
     <View style={styles.mainView}>
-      <ScrollView style={{backgroundColor: "transparent", width: "100%"}} contentContainerStyle={{flexGrow: 1}}>
+      <ScrollView style={{backgroundColor: "transparent", width: "100%", height: "100%", flexGrow: 1}} contentContainerStyle={{flexGrow: 1}}>
         <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
             <Image source={icon} style={{width: "90%", maxWidth: 70, height: "90%", maxHeight: 70, marginBottom: 15}} />
             <Text style={{color: "white", fontSize: 12, fontWeight: "bold", marginBottom: 20}}>{name}</Text>
