@@ -49,7 +49,7 @@ const DraggableIndex = ({instance, label, Component}) => {
         <View style={{backgroundColor: "transparent", width: "100%", height: "100%", borderRadius: 5, position: "absolute", top: 0}}>
           <View style={{backgroundColor: "black", opacity: 1, width: "100%", height: 30, justifyContent: "center", paddingLeft: 0, paddingRight: 0}}>
             <View style={{flex: 1, flexDirection: "row", justifyContent: "space-between", alignItems: "center"}}>
-                <Text style={{color: "white", fontSize: 12, paddingLeft: 10}}>{label}</Text>
+                <Text style={{color: "white", fontSize: 12, paddingLeft: 10, flex: 1}} numberOfLines={1}>{label}</Text>
                 <View style={{flex: 0, flexDirection: "row", height: "100%", width: 80}}>
                   <TouchableOpacity onPress={() => { maximizeWindow() }} style={{backgroundColor: "transparent", width: 40, height: "100%", justifyContent: "center", alignItems: "center"}}>
                       {maximizedStatus? <MCIcon name='window-restore' color="white" size={20} /> : <MCIcon name='window-maximize' color="white" size={20} />}

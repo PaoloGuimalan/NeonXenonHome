@@ -2,6 +2,8 @@ import { View, Text, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHa
 import React, { useState, useEffect } from 'react'
 import { openDatabase } from 'react-native-sqlite-storage'
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
+import NeonBgV2Landscape from '../../resources/imgs/DefaultBgV2Landscape.jpg'
+import NeonBgV2Portrait from '../../resources/imgs/DefaultBgV2Portrait.jpg'
 import PWAIcon from '../../resources/imgs/pwaIcon.png'
 import { useDispatch, useSelector } from 'react-redux'
 import { SET_APPS, SET_APP_FLOATER, SET_DRAGGABLE_WINDOW, SET_PWA_LIST } from '../../redux/types'
@@ -20,6 +22,7 @@ const Desktop = () => {
   const appShortcuts = useSelector(state => state.apps);
   const pwalist = useSelector(state => state.pwalist);
   const arrComponents = useSelector(state => state.draggablewindow);
+  const orientationstatus = useSelector(state => state.orientationstatus)
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -130,7 +133,7 @@ const Desktop = () => {
 
   return (
     <View style={styles.mainView}>
-        <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
+        <ImageBackground blurRadius={0} source={orientationstatus? NeonBgV2Landscape : NeonBgV2Portrait} style={styles.imagebackgroundstyle}>
             <View style={styles.viewShortcuts}>
                 {appShortcuts.map((apps, i) => {
                     return(
@@ -172,7 +175,8 @@ const styles = StyleSheet.create({
     imagebackgroundstyle:{
         width: "100%",
         height: "100%",
-        flex: 1
+        flex: 1,
+        resizeMode: "contain"
     },
     viewAppsIndv:{
         backgroundColor: "transparent",

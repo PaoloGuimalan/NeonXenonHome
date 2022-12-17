@@ -14,6 +14,9 @@ project(':react-native-sqlite-storage').projectDir = new File(rootProject.projec
 include ':react-native-intent-launcher'
 project(':react-native-intent-launcher').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-intent-launcher/android')
 
+include ':react-native-android-notification-listener'
+project(':react-native-android-notification-listener').projectDir = new File(rootProject.projectDir, 	'../node_modules/react-native-android-notification-listener/android')
+
 if (settings.hasProperty("newArchEnabled") && settings.newArchEnabled == "true") {
     include(":ReactAndroid")
     project(":ReactAndroid").projectDir = file('../node_modules/react-native/ReactAndroid')

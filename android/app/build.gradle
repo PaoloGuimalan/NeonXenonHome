@@ -290,6 +290,8 @@ dependencies {
 
     implementation project(':react-native-intent-launcher')
 
+    implementation project(':react-native-android-notification-listener')
+
     debugImplementation("com.facebook.flipper:flipper:${FLIPPER_VERSION}") {
         exclude group:'com.facebook.fbjni'
     }

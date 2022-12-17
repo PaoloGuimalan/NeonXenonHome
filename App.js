@@ -17,7 +17,8 @@ import {
   useColorScheme,
   View,
   ToastAndroid,
-  Platform
+  Platform,
+  Dimensions
 } from 'react-native';
 
 import {
@@ -32,8 +33,9 @@ import Splash from './src/components/maincomponents/Splash';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 import { openDatabase } from 'react-native-sqlite-storage'
-import { Provider } from 'react-redux';
+import { Provider, useDispatch } from 'react-redux';
 import store from './src/redux/store';
+import { SET_ORIENTATION_STATUS } from './src/redux/types';
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -81,6 +83,7 @@ const App: () => Node = () => {
     //   setsplashstatus(false);
     // }, 4000)
     initializeDatabase()
+    // createNotificationTable()
     //createPWATables()
   },[])
 
@@ -91,6 +94,7 @@ const App: () => Node = () => {
         if(res.rows.length == 0){
           createTables();
           createPWATables();
+          createNotificationTable()
           setTimeout(() => {
             setsplashstatus(false);
           }, 4000)
@@ -112,6 +116,83 @@ const App: () => Node = () => {
       })
     })
   }
+
+  const createNotificationTable = () => {
+    db.transaction(txn => {
+      txn.executeSql(
+        `CREATE TABLE IF NOT EXISTS notifStorage (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          notifID VARCHAR(225), 
+          app VARCHAR(225), 
+          audioContentsURI TEXT, 
+          bigText TEXT,
+          extraInfoText TEXT, 
+          icon BLOB, 
+          iconLarge BLOB, 
+          image BLOB, 
+          imageBackgroundURI BLOB, 
+          subText TEXT, 
+          summaryText TEXT, 
+          text TEXT, 
+          time VARCHAR(255), 
+          title TEXT, 
+          titleBig TEXT
+          )`,
+        [],
+        (sqlTxn, res) => {
+          // console.log("table created successfully");
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Notification Initialized", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Notification Initialized")
+          }
+          createGroupMessagesNotif()
+        },
+        error => {
+          console.log("error on creating table " + error.message);
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error Creating Database!", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error Creating Database!")
+          }
+        },
+      );
+    });
+  };
+
+  const createGroupMessagesNotif = () => {
+    db.transaction(txn => {
+      txn.executeSql(
+        `CREATE TABLE IF NOT EXISTS notifGroupStorage (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          notifID VARCHAR(225), 
+          text VARCHAR(225), 
+          title VARCHAR(225)
+          )`,
+        [],
+        (sqlTxn, res) => {
+          // console.log("table created successfully");
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Group Notification Initialized", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Group Notification Initialized")
+          }
+        },
+        error => {
+          console.log("error on creating table " + error.message);
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Error Creating Database!", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Error Creating Database!")
+          }
+        },
+      );
+    });
+  };
 
   const createTables = () => {
     db.transaction(txn => {

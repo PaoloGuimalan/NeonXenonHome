@@ -1,4 +1,4 @@
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from "../types";
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_NOTIFICATIONS_LIST, SET_ORIENTATION_STATUS, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from "../types";
 
 export const setapps = (state = [], action) => {
     switch(action.type){
@@ -99,6 +99,24 @@ export const setpwalist = (state = [], action) => {
     switch(action.type){
         case SET_PWA_LIST:
             return action.pwalist;
+        default:
+            return state;
+    }
+}
+
+export const setorientationstatus = (state = false, action) => {
+    switch(action.type){
+        case SET_ORIENTATION_STATUS:
+            return action.orientationstatus;
+        default:
+            return state;
+    }
+}
+
+export const setnotificationslist = (state = [], action) => {
+    switch(action.type){
+        case SET_NOTIFICATIONS_LIST:
+            return action.notificationslist;
         default:
             return state;
     }

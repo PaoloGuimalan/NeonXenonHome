@@ -1,14 +1,18 @@
-import { View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList, PermissionsAndroid } from 'react-native'
+import { AppRegistry, View, Text, Animated, StyleSheet, ImageBackground, ToastAndroid, Platform, BackHandler, Image, ScrollView, TouchableOpacity, TextInput, NativeModules, Linking, FlatList, PermissionsAndroid, Dimensions } from 'react-native'
 import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import AntIcon from 'react-native-vector-icons/AntDesign'
+import MatIcon from 'react-native-vector-icons/MaterialIcons'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
+import LogoNeonV2 from '../../resources/imgs/NeonLogo_V2.png'
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
+import NeonBgV2Landscape from '../../resources/imgs/DefaultBgV2Landscape.jpg'
+import NeonBgV2Portrait from '../../resources/imgs/DefaultBgV2Portrait.jpg'
 import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_ORIENTATION_STATUS, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
 import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
 import Axios from 'axios'
 import { newsDataState, weatherDataState } from '../../redux/actions';
@@ -19,6 +23,19 @@ import Settings from '../windowcomponents/Settings';
 import WebPWA from '../windowcomponents/WebPWA';
 import PWAIcon from '../../resources/imgs/pwaIcon.png'
 import PWAInfo from '../windowcomponents/PWAInfo'
+import RNAndroidNotificationListener, { RNAndroidNotificationListenerHeadlessJsName }  from 'react-native-android-notification-listener'
+
+let headlessNotificationListener;
+
+/**
+* AppRegistry should be required early in the require sequence
+* to make sure the JS execution environment is setup before other
+* modules are required.
+*/
+AppRegistry.registerHeadlessTask(
+  RNAndroidNotificationListenerHeadlessJsName,
+  () => headlessNotificationListener
+)
 
 const db = openDatabase({
   name: "neonxenonhomedb"
@@ -28,9 +45,269 @@ const TabStack = createNativeStackNavigator();
 
 const Home = () => {
 
+  const makeid = (length) => {
+      var result           = '';
+      var characters       = '0123456789';
+      var charactersLength = characters.length;
+      for ( var i = 0; i < length; i++ ) {
+        result += characters.charAt(Math.floor(Math.random() * 
+  charactersLength));
+    }
+    return result;
+  }
+
+  headlessNotificationListener = async ({ notification }) => {
+    /**
+     * This notification is a JSON string in the follow format:
+     *  {
+     *      "app": string,
+     *      "title": string,
+     *      "titleBig": string,
+     *      "text": string,
+     *      "subText": string,
+     *      "summaryText": string,
+     *      "bigText": string,
+     *      "audioContentsURI": string,
+     *      "imageBackgroundURI": string,
+     *      "extraInfoText": string,
+     *      "groupedMessages": Array<Object> [
+     *          {
+     *              "title": string,
+     *              "text": string
+     *          }
+     *      ]
+     *  }
+     */
+  
+    if (notification) {
+        /**
+         * Here you could store the notifications in a external API.
+         * I'm using AsyncStorage here as an example.
+         */
+        // console.log(await JSON.parse(notification))
+        // saveNotif(await JSON.parse(notification))
+    }
+    // console.log(notification)
+  }
+
+  const clearNotifs = () => {
+    db.transaction(txn => {
+      txn.executeSql(`DELETE FROM notifStorage`,
+      [],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          clearGroupNotifs()
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Notifications already empty", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Notifications already empty")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error Clearing Notifications`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error Clearing Notifications`)
+        }
+      })
+    })
+  }
+
+  const clearGroupNotifs = () => {
+    db.transaction(txn => {
+      txn.executeSql(`DELETE FROM notifGroupStorage`,
+      [],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Notifications Cleared", ToastAndroid.SHORT)
+            // console.log(notification.groupedMessages.length)
+          }
+          else{
+              alert("Notifications Cleared")
+          }
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Unable to Clear Group Notifications", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Unable to Clear Group Notifications")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error Clearing Group Notification`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error Clearing Group Notification`)
+        }
+      })
+    })
+  }
+
+  const saveNotif = (notification) => {
+
+    const notifID = makeid(10);
+
+    db.transaction(txn => {
+      txn.executeSql(`INSERT INTO notifStorage (
+        notifID, 
+        app, 
+        audioContentsURI, 
+        bigText,
+        extraInfoText, 
+        icon, 
+        iconLarge, 
+        image, 
+        imageBackgroundURI, 
+        subText, 
+        summaryText, 
+        text, 
+        time, 
+        title, 
+        titleBig
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        notifID, 
+        notification.app, 
+        notification.audioContentsURI, 
+        notification.bigText,
+        notification.extraInfoText, 
+        notification.icon, 
+        notification.iconLarge, 
+        notification.image, 
+        notification.imageBackgroundURI, 
+        notification.subText, 
+        notification.summaryText, 
+        notification.text, 
+        notification.time, 
+        notification.title, 
+        notification.titleBig
+      ],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("New Notification", ToastAndroid.SHORT)
+            // console.log(notification.groupedMessages.length)
+          }
+          else{
+              alert("New Notification")
+          }
+
+          if(notification.groupedMessages.length > 0){
+            notification.groupedMessages.map((data, i) => {
+              saveGroupNotif(notifID, data)
+            })
+          }
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Cannot process Notification", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Cannot process Notification")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error fetching Notification`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error fetching Notification`)
+        }
+      })
+    })
+  }
+
+  const saveGroupNotif = (notifID, notification) => {
+    db.transaction(txn => {
+      txn.executeSql(`INSERT INTO notifGroupStorage (
+        notifID, 
+        text, 
+        title
+      ) VALUES (?,?,?)`,
+      [
+        notifID, 
+        notification.text, 
+        notification.title
+      ],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("New Group Notification", ToastAndroid.SHORT)
+          }
+          else{
+              alert("New Group Notification")
+          }
+        }
+        else{
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Cannot process Group Notification", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Cannot process Group Notification")
+          }
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error fetching Group Notification`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error fetching Group Notification`)
+        }
+      })
+    })
+  }
+
+  useEffect(() => {
+    // handleOnPressPermissionButton()
+    checkNotifPermission().catch((err) => {
+      console.log(err);
+    })
+  },[])
+
+  const checkNotifPermission = async () => {
+    const status = await RNAndroidNotificationListener.getPermissionStatus()
+    // console.log(status)
+    if(status == "denied"){
+      handleOnPressPermissionButton()
+    }
+    else{
+      if(Platform.OS === 'android'){
+        ToastAndroid.show("Notifications Running!", ToastAndroid.SHORT)
+      }
+      else{
+          alert("Notifications Running!")
+      }
+    }
+  }
+
+  const handleOnPressPermissionButton = async () => {
+    /**
+     * Open the notification settings so the user
+     * so the user can enable it
+     */
+    RNAndroidNotificationListener.requestPermission()
+  }
+
   //const [menuWindow, setmenuWindow] = useState(false);
   const menuWindow = useSelector(state => state.appswindow);
   const pwalist = useSelector(state => state.pwalist);
+  const notificationslist = useSelector(state => state.notificationslist);
+  const orientationstatus = useSelector(state => state.orientationstatus)
   const [appslist, setappslist] = useState([]);
 
   const [currentDate, setcurrentDate] = useState("00 / 00 / 0000");
@@ -57,6 +334,18 @@ const Home = () => {
   const dispatch = useDispatch()
 
   useEffect(() => {
+    Dimensions.addEventListener('change', () => {
+      let dim = Dimensions.get('screen');
+      if(dim.height > dim.width){
+        dispatch({ type: SET_ORIENTATION_STATUS, orientationstatus: false })
+      }
+      else{
+        dispatch({ type: SET_ORIENTATION_STATUS, orientationstatus: true })
+      }
+    })
+  },[]);
+
+  useEffect(() => {
     BackHandler.addEventListener('hardwareBackPress', function() {
       // console.log("hello");
       // navigation.popToTop()
@@ -77,10 +366,16 @@ const Home = () => {
 
   useEffect(() => {
     dateTimeSetter()
-    setInterval(() => {
-      dateTimeSetter();
-    }, 60000);
+    intervalMain()
   },[])
+
+  const intervalMain = () => {
+    const intervalSetter = setInterval(() => {
+      dateTimeSetter();
+      clearInterval(intervalSetter);
+      intervalMain()
+    }, 60000);
+  }
 
   const dateTimeSetter = () => {
     const date = new Date().getDate();
@@ -91,13 +386,13 @@ const Home = () => {
     const seconds = new Date().getSeconds();
 
     setcurrentDate(`${month} / ${date} / ${year}`);
-    setcurrentTime(`${hours} : ${minutes}`);
+    setcurrentTime(`${hours < 10? `0${hours}` : hours} : ${minutes < 10? `0${minutes}` : minutes}`);
     //setcurrentTime(`${hours} : ${minutes} : ${seconds}`);
   }
 
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
-  const [animDT, setanimDT] = useState(new Animated.Value(-250));
-  const [animMW, setanimMW] = useState(new Animated.Value(-350));
+  const [animDT, setanimDT] = useState(new Animated.Value(-290));
+  const [animMW, setanimMW] = useState(new Animated.Value(-450));
 
   const [appMenuMiniDrawer, setappMenuMiniDrawer] = useState(false);
 
@@ -111,32 +406,36 @@ const Home = () => {
       position: "absolute",
       bottom: animVal, //animVal or 60
       borderRadius: 5,
-      opacity: 0.8,
+      opacity: 0.9,
       borderWidth: 1,
       borderColor: "#292929",
-      zIndex: 2
+      zIndex: 2,
+      paddingTop: 15
     },
     viewAbsoluteDateTimeWindow:{
-      backgroundColor: "black",
+      backgroundColor: "transparent",
       position: "absolute",
       width: "90%",
-      height: "90%",
+      height: "80%",
       zIndex: 1,
-      maxWidth: 230,
-      maxHeight: 100,
+      maxWidth: 270,
+      maxHeight: 500,
       bottom: 60,
-      right: animDT,
+      right: animDT, //animDT || 5
       borderRadius: 5,
-      opacity: 0.8,
+      opacity: 0.9,
       borderWidth: 1,
-      borderColor: "#292929",
+      borderColor: "transparent",
       justifyContent: "center",
-      alignItems: "center"
+      alignItems: "center",
+      paddingBottom: 0,
+      flex: 1,
+      flexDirection: "column"
     },
     viewWindowWeatherNews:{
       backgroundColor: "black", 
       width: "90%",
-      maxWidth: 300,
+      maxWidth: 400,
       position: "absolute",
       zIndex: 1,
       height: "80%",
@@ -144,7 +443,7 @@ const Home = () => {
       bottom: 60,
       left: animMW, //animMW
       borderRadius: 5,
-      opacity: 0.8,
+      opacity: 0.9,
       borderWidth: 1,
       borderColor: "#292929",
       justifyContent: "center",
@@ -221,7 +520,7 @@ const Home = () => {
     Animated.timing(
       animMW,
       {
-        toValue: -350,
+        toValue: -450,
         duration: 1000,
         useNativeDriver: false
       }
@@ -243,7 +542,7 @@ const Home = () => {
     Animated.timing(
       animDT,
       {
-        toValue: -250,
+        toValue: -290,
         duration: 1000,
         useNativeDriver: false
       }
@@ -751,18 +1050,18 @@ const Home = () => {
       PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
     ]).then((result) => {
       if(Platform.OS === 'android'){
-        ToastAndroid.show(`Permision granted`, ToastAndroid.SHORT)
+        ToastAndroid.show(`Welcome, all services are ready!`, ToastAndroid.SHORT)
         // console.log(result)
       }
       else{
-            alert(`Permision granted`)
+            alert(`Welcome, all services are ready!`)
       }
     })
   }
 
   return (
     <View style={styles.mainView}>
-      <ImageBackground blurRadius={0} source={NeXeBg} style={styles.imagebackgroundstyle}>
+      <ImageBackground blurRadius={0} source={NeonBgV2Landscape} style={styles.imagebackgroundstyle}>
         {arrComponents.map((comps, i) => {
           return(
             <DragResizeBlock key={i} maxWindow={comps.maximized}>
@@ -846,7 +1145,7 @@ const Home = () => {
               {menuweatherNewsWindowStatus? (
                 newsdata.articles.map((newslist, i) => {
                   return(
-                    <TouchableOpacity onPress={() => { openLink(newslist.url) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
+                    <TouchableOpacity onPress={() => { openPWA(`News | ${newslist.title}`, <WebPWA label={`News | ${newslist.title}`} urlPWA={newslist.url} />) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
                       <View style={{width: "100%"}}>
                         <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
                         <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
@@ -869,7 +1168,41 @@ const Home = () => {
           </ScrollView>
         </Animated.View>
         <Animated.View style={animStyles.viewAbsoluteDateTimeWindow}>
-          <View style={{backgroundColor: "transparent", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10}}>
+          <View style={{
+            backgroundColor: "black", 
+            marginBottom: 5, 
+            width: "100%",
+            height: "100%",
+            borderRadius: 5,
+            opacity: 1,
+            borderWidth: 1,
+            borderColor: "#292929",
+            flex: 1,
+            flexDirection: "column"
+          }}>
+            <View style={{backgroundColor: "transparent", width: "100%", flex: 1, flexDirection: "row", maxHeight: 38, borderBottomWidth: 1, borderBottomColor: "#292929", alignItems: "center", padding: 10, justifyContent: "space-between"}}>
+              <Text style={{color: "white", fontWeight: "bold"}}>Notifications</Text>
+              <TouchableOpacity onPress={() => { clearNotifs() }} style={{backgroundColor: "#292929", width: 70, height: 25, justifyContent: 'center', alignItems: "center", borderRadius: 5}}>
+                <Text style={{color: "white", fontSize: 10}}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+            {notificationslist.length == 0? (
+              <View style={{backgroundColor: "transparent", flex: 1, alignItems: "center", justifyContent: "center"}}>
+                <MatIcon name='notifications-none' style={{color: "grey", fontSize: 50}} />
+                <Text style={{color: "grey", marginTop: 5, fontSize: 10}}>No Notifications</Text>
+              </View>
+            ) : (
+              <Text>Hello</Text>
+            )}
+          </View>
+          <View style={{backgroundColor: "black", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10, 
+            borderRadius: 5,
+            opacity: 1,
+            borderWidth: 1,
+            borderColor: "#292929",
+            width: "100%",
+            minHeight: 100,
+            maxHeight: 100}}>
             <View style={{backgroundColor: "transparent", width: "30%", alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderColor: "#383838"}}>
               <Text style={{color: "white", fontSize: 30}}>{datetimedata.day}</Text>
               <Text style={{color: "white", fontSize: 12}}>{datetimedata.dayname}</Text>
@@ -1007,7 +1340,7 @@ const Home = () => {
             <View style={styles.viewCenterTab}>
               <ScrollView style={{backgroundColor: "transparent", width: "100%", paddingTop: 0}} contentContainerStyle={{flexGrow: 1, flexDirection: "row", flexWrap: "wrap", justifyContent: "center"}} >
                 <TouchableOpacity style={{margin: 5}} onPress={() => { windowHideOpen() }}>
-                  <Image source={LogoNeon} style={styles.logoMenuStyle} />
+                  <Image source={LogoNeonV2} style={styles.logoMenuStyle} />
                 </TouchableOpacity>
                 {taskbarapps.map((taskapps, i) => {
                   return(
