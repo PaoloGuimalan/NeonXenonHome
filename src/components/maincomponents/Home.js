@@ -43,7 +43,7 @@ const db = openDatabase({
 
 const TabStack = createNativeStackNavigator();
 
-const Home = () => {
+const Home = ({navigation}) => {
 
   const makeid = (length) => {
       var result           = '';
@@ -392,7 +392,7 @@ const Home = () => {
 
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
   const [animDT, setanimDT] = useState(new Animated.Value(-290));
-  const [animMW, setanimMW] = useState(new Animated.Value(-450));
+  const [animMW, setanimMW] = useState(new Animated.Value(-400));
 
   const [appMenuMiniDrawer, setappMenuMiniDrawer] = useState(false);
 
@@ -435,7 +435,7 @@ const Home = () => {
     viewWindowWeatherNews:{
       backgroundColor: "black", 
       width: "90%",
-      maxWidth: 400,
+      maxWidth: 350,
       position: "absolute",
       zIndex: 1,
       height: "80%",
@@ -520,7 +520,7 @@ const Home = () => {
     Animated.timing(
       animMW,
       {
-        toValue: -450,
+        toValue: -400,
         duration: 1000,
         useNativeDriver: false
       }
@@ -1309,7 +1309,7 @@ const Home = () => {
             <View style={styles.viewBottomAbsoluteWindow}>
               <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
                 <View style={{backgroundColor: "transparent", height: "100%", width: 100, justifyContent: "center", alignItems: "center", flexDirection: "row"}}>
-                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings />) }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
+                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings navigation={navigation} />) }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
                     <IonIcon name='settings' size={20} color="white" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => { openDrawerOptions() }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>

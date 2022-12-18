@@ -94,12 +94,12 @@ const PWASettings = () => {
 
   return (
     <View style={styles.mainView}>
-      <Text style={{color: "white", fontSize: 12, fontWeight: "bold", marginBottom: 10}}>Progressive Web Apps Settings</Text>
-      <Text style={{color: "white", fontSize: 12, marginBottom: 10}}>Add a new PWA</Text>
-      <TextInput onChangeText={(e) => { setPWAName(e) }} defaultValue={PWAName} style={{padding: 0, paddingLeft: 5, paddingRight: 5, borderRadius: 5, borderWidth: 1, borderColor: "white", height: 30, width: "90%", fontSize: 12, color: "white", marginBottom: 10}} placeholderTextColor="white" placeholder='PWA Name' />
-      <TextInput onChangeText={(e) => { setPWAUrl(e) }} defaultValue={PWAUrl} style={{padding: 0, paddingLeft: 5, paddingRight: 5, borderRadius: 5, borderWidth: 1, borderColor: "white", height: 30, width: "90%", fontSize: 12, color: "white", marginBottom: 10}} placeholderTextColor="white" placeholder='Input URL here' />
+      <Text style={{color: "white", fontSize: 13, fontWeight: "bold", marginBottom: 10}}>Progressive Web Apps Settings</Text>
+      <Text style={{color: "white", fontSize: 11, marginBottom: 10}}>Add a new PWA</Text>
+      <TextInput onChangeText={(e) => { setPWAName(e) }} defaultValue={PWAName} style={{padding: 0, paddingLeft: 5, paddingRight: 5, borderRadius: 5, borderWidth: 1, borderColor: "white", height: 30, width: "90%", fontSize: 11, color: "white", marginBottom: 10}} placeholderTextColor="white" placeholder='PWA Name' />
+      <TextInput onChangeText={(e) => { setPWAUrl(e) }} defaultValue={PWAUrl} style={{padding: 0, paddingLeft: 5, paddingRight: 5, borderRadius: 5, borderWidth: 1, borderColor: "white", height: 30, width: "90%", fontSize: 11, color: "white", marginBottom: 10}} placeholderTextColor="white" placeholder='Input URL here' />
       <TouchableOpacity onPress={() => { savePWA() }}>
-        <Text style={{color: "black", fontSize: 12, backgroundColor: "white", width: "90%", maxWidth: 70, height: 25, textAlign: "center", textAlignVertical: "center", borderRadius: 5}}>Process</Text>
+        <Text style={{color: "black", fontSize: 11, backgroundColor: "white", width: "90%", maxWidth: 70, height: 25, textAlign: "center", textAlignVertical: "center", borderRadius: 5}}>Process</Text>
       </TouchableOpacity>
     </View>
   )
