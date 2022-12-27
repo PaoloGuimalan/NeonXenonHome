@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import IonIcon from 'react-native-vector-icons/Ionicons'
 import AntIcon from 'react-native-vector-icons/AntDesign'
 import MatIcon from 'react-native-vector-icons/MaterialIcons'
+import MCIcon from 'react-native-vector-icons/MaterialCommunityIcons'
+import EntIcon from 'react-native-vector-icons/Entypo'
 import LogoNeon from '../../resources/imgs/NeXeLogo.png';
 import LogoNeonV2 from '../../resources/imgs/NeonLogo_V2.png'
 import NeXeBg from '../../resources/imgs/neonlightsbg2.jpg'
@@ -12,7 +14,7 @@ import Desktop from '../tabcomponents/Desktop';
 import { openDatabase } from 'react-native-sqlite-storage'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_ORIENTATION_STATUS, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
+import { SET_APPS, SET_APPS_WINDOW, SET_APP_FLOATER, SET_DATE_TIME_DATA, SET_DRAGGABLE_WINDOW, SET_NEWS_DATA, SET_NOTIFICATIONS_LIST, SET_ORIENTATION_STATUS, SET_PWA_LIST, SET_TASKBAR_APPS, SET_WEATHER } from '../../redux/types';
 import IntentLauncher, { IntentConstant } from 'react-native-intent-launcher'
 import Axios from 'axios'
 import { newsDataState, weatherDataState } from '../../redux/actions';
@@ -85,7 +87,7 @@ const Home = ({navigation}) => {
          * I'm using AsyncStorage here as an example.
          */
         // console.log(await JSON.parse(notification))
-        // saveNotif(await JSON.parse(notification))
+        saveNotif(await JSON.parse(notification))
     }
     // console.log(notification)
   }
@@ -97,7 +99,13 @@ const Home = ({navigation}) => {
       (sqlTxn, res) => {
         //console.log(res)
         if(res.rowsAffected > 0){
-          clearGroupNotifs()
+          initNotifications()
+          if(Platform.OS === 'android'){
+            ToastAndroid.show("Notifications cleared", ToastAndroid.SHORT)
+          }
+          else{
+              alert("Notifications cleared")
+          }
         }
         else{
           if(Platform.OS === 'android'){
@@ -117,6 +125,33 @@ const Home = ({navigation}) => {
         }
       })
     })
+
+    // db.transaction(txn => {
+    //   txn.executeSql(`SELECT * FROM notifStorage WHERE title = ?`,
+    //   ["YouTube"],
+    //   (sqlTxn, res) => {
+    //     console.log(res.rows.raw())
+    //     if(res.rowsAffected > 0){
+    //       // clearGroupNotifs()
+    //     }
+    //     else{
+    //       if(Platform.OS === 'android'){
+    //         ToastAndroid.show("Notifications already empty", ToastAndroid.SHORT)
+    //       }
+    //       else{
+    //           alert("Notifications already empty")
+    //       }
+    //     }
+    //   },
+    //   (error) => {
+    //     if(Platform.OS === 'android'){
+    //       ToastAndroid.show(`Error Clearing Notifications`, ToastAndroid.SHORT)
+    //     }
+    //     else{
+    //         alert(`Error Clearing Notifications`)
+    //     }
+    //   })
+    // })
   }
 
   const clearGroupNotifs = () => {
@@ -196,19 +231,23 @@ const Home = ({navigation}) => {
       (sqlTxn, res) => {
         //console.log(res)
         if(res.rowsAffected > 0){
-          if(Platform.OS === 'android'){
-            ToastAndroid.show("New Notification", ToastAndroid.SHORT)
-            // console.log(notification.groupedMessages.length)
-          }
-          else{
-              alert("New Notification")
-          }
+          // if(Platform.OS === 'android'){
+          //   ToastAndroid.show("New Notification", ToastAndroid.SHORT)
+          //   // console.log(notification.groupedMessages.length)
+          // }
+          // else{
+          //     alert("New Notification")
+          // }
 
           if(notification.groupedMessages.length > 0){
             notification.groupedMessages.map((data, i) => {
-              saveGroupNotif(notifID, data)
+              // saveGroupNotif(notifID, data)
             })
           }
+
+          setTimeout(() => {
+            initNotifications()
+          }, 1000);
         }
         else{
           if(Platform.OS === 'android'){
@@ -277,11 +316,13 @@ const Home = ({navigation}) => {
     checkNotifPermission().catch((err) => {
       console.log(err);
     })
+
+    initNotifications()
   },[])
 
   const checkNotifPermission = async () => {
     const status = await RNAndroidNotificationListener.getPermissionStatus()
-    // console.log(status)
+    console.log(status)
     if(status == "denied"){
       handleOnPressPermissionButton()
     }
@@ -303,6 +344,25 @@ const Home = ({navigation}) => {
     RNAndroidNotificationListener.requestPermission()
   }
 
+  const initNotifications = () => {
+    db.transaction(txn => {
+      txn.executeSql(`SELECT * FROM notifStorage ORDER BY time DESC`,
+      [],
+      (sqlTxn, res) => {
+        // console.log(res.rows.raw())
+        dispatch({ type: SET_NOTIFICATIONS_LIST, notificationslist: res.rows.raw() })
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error Scanning Notifications`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error Scanning Notifications`)
+        }
+      })
+    })
+  }
+
   //const [menuWindow, setmenuWindow] = useState(false);
   const menuWindow = useSelector(state => state.appswindow);
   const pwalist = useSelector(state => state.pwalist);
@@ -319,6 +379,14 @@ const Home = ({navigation}) => {
   //enable scroll when taskbar apps are more than
   const [taskbarscroll, settaskbarscroll] = useState(false);
   const [appdrawer, setappdrawer] = useState("Apps");
+
+  const [reRenderer, setreRenderer] = useState(false);
+
+  const [minimizedList, setminimizedList] = useState(false);
+
+  useEffect(() => {
+
+  }, [reRenderer])
 
   // let arrComponents = [];
   //const [arrComponents, setarrComponents] = useState([]);
@@ -391,7 +459,7 @@ const Home = ({navigation}) => {
   }
 
   const [animVal, setanimVal] = useState(new Animated.Value(-400));
-  const [animDT, setanimDT] = useState(new Animated.Value(-290));
+  const [animDT, setanimDT] = useState(new Animated.Value(-280));
   const [animMW, setanimMW] = useState(new Animated.Value(-400));
 
   const [appMenuMiniDrawer, setappMenuMiniDrawer] = useState(false);
@@ -418,7 +486,7 @@ const Home = ({navigation}) => {
       width: "90%",
       height: "80%",
       zIndex: 1,
-      maxWidth: 270,
+      maxWidth: 330,
       maxHeight: 500,
       bottom: 60,
       right: animDT, //animDT || 5
@@ -430,7 +498,7 @@ const Home = ({navigation}) => {
       alignItems: "center",
       paddingBottom: 0,
       flex: 1,
-      flexDirection: "column"
+      flexDirection: "row"
     },
     viewWindowWeatherNews:{
       backgroundColor: "black", 
@@ -542,7 +610,7 @@ const Home = ({navigation}) => {
     Animated.timing(
       animDT,
       {
-        toValue: -290,
+        toValue: -280,
         duration: 1000,
         useNativeDriver: false
       }
@@ -967,7 +1035,7 @@ const Home = ({navigation}) => {
         temp_f: response.data.current.temp_f
       }})
     }).catch((err) => {
-      dispatch({type: SET_WEATHER, weatherdata: weatherDataState})
+      // dispatch({type: SET_WEATHER, weatherdata: weatherDataState})
     })
   }
 
@@ -993,7 +1061,7 @@ const Home = ({navigation}) => {
     Linking.openURL(url)
   }
 
-  const openDraggable = (instanceRemark, label, Component) => {
+  const openDraggable = (instanceRemark, label, type, Component) => {
     // arrComponents.push({
     //   instance: instanceRemark,
     //   component: <DraggableIndex label={label} component={component} />
@@ -1009,28 +1077,39 @@ const Home = ({navigation}) => {
         {
         instance: arrComponents.length + 1,
         maximized: false,
+        minimized: false,
+        label: label,
+        type: type,
         component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
       }]
     })
   }
 
-  const openPWA = (label, Component) => {
+  const openPWA = (label, type, urlRef, Component) => {
     dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: [
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
         maximized: false,
+        minimized: false,
+        label: label,
+        type: type,
+        urlRef: urlRef,
         component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
       }]
     })
   }
 
-  const holdPWAOption = (id, name, Component) => {
+  const holdPWAOption = (id, name, type, urlRef, Component) => {
     dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: [
         ...arrComponents,
         {
         instance: arrComponents.length + 1,
         maximized: false,
+        minimized: false,
+        label: name,
+        type: type,
+        urlRef: urlRef,
         component: <DraggableIndex instance={arrComponents.length + 1} label={`${name} Info`} Component={Component} />
       }]
     })
@@ -1058,13 +1137,94 @@ const Home = ({navigation}) => {
       }
     })
   }
+  
+  let existingTitle = [];
+  
+  const deleteSingleNotif = (id) => {
+    db.transaction(txn => {
+      txn.executeSql(`DELETE FROM notifStorage WHERE id = ?`,
+      [id],
+      (sqlTxn, res) => {
+        //console.log(res)
+        if(res.rowsAffected > 0){
+          initNotifications()
+        }
+      },
+      (error) => {
+        if(Platform.OS === 'android'){
+          ToastAndroid.show(`Error Clearing Notifications`, ToastAndroid.SHORT)
+        }
+        else{
+            alert(`Error Clearing Notifications`)
+        }
+      })
+    })
+  }
+
+  const unminimizeWindow = (instanceMin, minimizedstat) => {
+    if(minimizedstat){
+      var arrDeletionModification = []
+
+      for(var i = 0; i < arrComponents.length; i++){
+          // console.log(arrComponents[i]);
+          if(arrComponents[i].instance != instanceMin){
+              arrDeletionModification.push(arrComponents[i])
+          }
+          else{
+            arrDeletionModification.push({...arrComponents[i], minimized: !arrComponents[i].minimized})
+          }
+      }
+      dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: arrDeletionModification})
+    }
+  }
+
+  const NotificationDrawer = ({data}) => {
+
+    const [triggerDelete, settriggerDelete] = useState(false);
+
+    return(
+      <TouchableOpacity
+      delayLongPress={500}
+      onLongPress={() => {
+        // triggerDelete = !triggerDelete;
+        settriggerDelete(!triggerDelete)
+        // console.log(triggerDelete)
+      }} style={{width: "100%"}}>
+        <View style={{backgroundColor: "#292929", marginBottom: 5, minHeight: 65, flex: 1, flexDirection: "column", paddingLeft: 5, paddingRight: 5, borderRadius: 5, paddingBottom: 10}}>
+          <View style={{flex: 1, flexDirection: "row", alignItems: "center", marginTop: 5, maxHeight: 20, backgroundColor: "transparent", marginBottom: 5}}>
+            {data.icon? (
+              <Image source={{uri: data.icon}} style={{width: 15, height: 15}} />
+            ) : (
+              <Image source={LogoNeonV2} style={{width: 15, height: 15}} />
+            )}
+            <Text style={{color: "white", marginLeft: 5, fontSize: 12, textAlignVertical: "center"}}>{data.app == "com.android.vending"? "System" : data.title}</Text>
+            <View style={{flexGrow: 1, backgroundColor: "transparent", alignItems: "flex-end"}}>
+              {data.iconLarge? (
+                <Image source={{uri: data.iconLarge}} style={{width: 15, height: 15}} />
+              ) : null}
+            </View>
+          </View>
+          <View>
+            <Text style={{color: "white", fontSize: 11, paddingLeft: 5, paddingRight: 5}}>{data.app == "com.android.vending"? `${data.subText} ${data.title}` : data.text}</Text>
+          </View>
+          {triggerDelete? (
+            <View style={{backgroundColor: "transparent", marginTop: 10, flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center"}}>
+              <TouchableOpacity onPress={() => { deleteSingleNotif(data.id) }} style={{backgroundColor: "red", width: 30, height: 25, justifyContent: "center", alignItems: "center", borderRadius: 5}}>
+                <MCIcon name='delete' style={{fontSize: 20, color: "white"}} />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </View>
+      </TouchableOpacity>
+    )
+  }
 
   return (
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeonBgV2Landscape} style={styles.imagebackgroundstyle}>
         {arrComponents.map((comps, i) => {
           return(
-            <DragResizeBlock key={i} maxWindow={comps.maximized}>
+            <DragResizeBlock key={i} minWindow={comps.minimized} maxWindow={comps.maximized}>
               {comps.component}
             </DragResizeBlock>
           )
@@ -1145,7 +1305,7 @@ const Home = ({navigation}) => {
               {menuweatherNewsWindowStatus? (
                 newsdata.articles.map((newslist, i) => {
                   return(
-                    <TouchableOpacity onPress={() => { openPWA(`News | ${newslist.title}`, <WebPWA label={`News | ${newslist.title}`} urlPWA={newslist.url} />) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
+                    <TouchableOpacity onPress={() => { openPWA(`News | ${newslist.title}`, "News", newslist.url, <WebPWA label={`News | ${newslist.title}`} urlPWA={newslist.url} />) }} key={i} style={{backgroundColor: "transparent", width: "100%", marginBottom: 10, paddingBottom: 10, borderBottomWidth: 1, borderColor: "#292929"}}>
                       <View style={{width: "100%"}}>
                         <Text style={{fontSize: 12, color: "white", fontWeight: "bold", marginBottom: 10}} numberOfLines={1}>{newslist.title}</Text>
                         <Text style={{fontSize: 11, color: "white", fontWeight: "bold"}} numberOfLines={2}>{newslist.source.name}</Text>
@@ -1169,48 +1329,237 @@ const Home = ({navigation}) => {
         </Animated.View>
         <Animated.View style={animStyles.viewAbsoluteDateTimeWindow}>
           <View style={{
-            backgroundColor: "black", 
-            marginBottom: 5, 
-            width: "100%",
+            backgroundColor: "transparent", 
+            width: 50, 
             height: "100%",
-            borderRadius: 5,
-            opacity: 1,
-            borderWidth: 1,
-            borderColor: "#292929",
-            flex: 1,
-            flexDirection: "column"
+            marginRight: 0
           }}>
-            <View style={{backgroundColor: "transparent", width: "100%", flex: 1, flexDirection: "row", maxHeight: 38, borderBottomWidth: 1, borderBottomColor: "#292929", alignItems: "center", padding: 10, justifyContent: "space-between"}}>
-              <Text style={{color: "white", fontWeight: "bold"}}>Notifications</Text>
-              <TouchableOpacity onPress={() => { clearNotifs() }} style={{backgroundColor: "#292929", width: 70, height: 25, justifyContent: 'center', alignItems: "center", borderRadius: 5}}>
-                <Text style={{color: "white", fontSize: 10}}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-            {notificationslist.length == 0? (
-              <View style={{backgroundColor: "transparent", flex: 1, alignItems: "center", justifyContent: "center"}}>
-                <MatIcon name='notifications-none' style={{color: "grey", fontSize: 50}} />
-                <Text style={{color: "grey", marginTop: 5, fontSize: 10}}>No Notifications</Text>
+              <View style={{
+                backgroundColor: "transparent",
+                flex: 1,
+                flexDirection: "column",
+                alignItems: "center"
+              }}>
+                <View style={{
+                  backgroundColor: "black",
+                  width: "100%",
+                  height: 50,
+                  borderTopLeftRadius: 5,
+                  borderBottomLeftRadius: 5,
+                  borderTopRightRadius: dateTimeWindow? 5 : 0,
+                  borderBottomRightRadius: dateTimeWindow? 5 : 0,
+                  borderWidth: 1,
+                  borderColor: "#292929",
+                  justifyContent: "center",
+                  alignItems: "center"
+                }}>
+                  <EntIcon name='archive' style={{fontSize: 25, color: "white"}} />
+                </View>
+                <TouchableOpacity style={{
+                  backgroundColor: "transparent",
+                  width: "100%",
+                  justifyContent: "center",
+                  alignItems: 'center'
+                }} onPress={() => { setminimizedList(!minimizedList) }} >
+                  {minimizedList? (
+                    <AntIcon name='up' style={{fontSize: 20, color: "white"}} />
+                  ) : (
+                    <AntIcon name='down' style={{fontSize: 20, color: "white"}} />
+                  )}
+                </TouchableOpacity>
+                {minimizedList? (
+                  <View style={{
+                    backgroundColor: "black",
+                    borderTopLeftRadius: 5,
+                    borderBottomLeftRadius: 5,
+                    borderTopRightRadius: dateTimeWindow? 5 : 0,
+                    borderBottomRightRadius: dateTimeWindow? 5 : 0,
+                    borderWidth: 1,
+                    borderColor: "#292929",
+                    width: "100%",
+                    flex: 1,
+                    paddingTop: 10,
+                    paddingBottom: 10
+                  }}>
+                    <ScrollView style={{
+                      flex: 1,
+                      flexGrow: 1,
+                      flexDirection: "column"
+                    }} contentContainerStyle={{
+                      alignItems: "center"
+                    }}>
+                      {arrComponents.map((comps, i) => {
+                        return(
+                          <TouchableOpacity key={i} style={{
+                            width: "100%",
+                            justifyContent: "center",
+                            alignItems: 'center'
+                          }} onPress={() => { unminimizeWindow(comps.instance, comps.minimized) }}>
+                            {comps.type == "PWA"? (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
+                                  width: 20,
+                                  height: 20,
+                                  position: "absolute",
+                                  zIndex: 1,
+                                  bottom: 0,
+                                  right: 5
+                                }} />
+                                <Image source={PWAIcon} style={{
+                                  width: 35,
+                                  height: 35
+                                }} />
+                              </View>
+                            ) : comps.type == "News"? (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef.split("/")[2]}&size=100`}} style={{
+                                  width: 20,
+                                  height: 20,
+                                  position: "absolute",
+                                  zIndex: 1,
+                                  bottom: 0,
+                                  right: 5
+                                }} />
+                                <EntIcon name='news' style={{fontSize: 35, color: "white"}} />
+                              </View>
+                            ) : comps.type == "Uninstall"? (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
+                                  width: 20,
+                                  height: 20,
+                                  position: "absolute",
+                                  zIndex: 1,
+                                  bottom: 0,
+                                  right: 5
+                                }} />
+                                <EntIcon name='uninstall' style={{fontSize: 35, color: "white"}} />
+                              </View>
+                            ) : comps.type == "System"? comps.label == "Settings"? (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <IonIcon name='settings' size={35} color="white" />
+                              </View>
+                            ) : (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <Image source={PWAIcon} style={{
+                                  width: 35,
+                                  height: 35
+                                }} />
+                              </View>
+                            ) : (
+                              <View style={{
+                                width: "100%",
+                                height: 45,
+                                justifyContent: "center",
+                                alignItems: 'center'
+                              }}>
+                                <Image source={PWAIcon} style={{
+                                  width: 35,
+                                  height: 35
+                                }} />
+                              </View>
+                            )}
+                          </TouchableOpacity>
+                        )
+                      })}
+                    </ScrollView>
+                  </View>
+                ) : null}
               </View>
-            ) : (
-              <Text>Hello</Text>
-            )}
           </View>
-          <View style={{backgroundColor: "black", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10, 
-            borderRadius: 5,
-            opacity: 1,
-            borderWidth: 1,
-            borderColor: "#292929",
+          <View style={{
             width: "100%",
-            minHeight: 100,
-            maxHeight: 100}}>
-            <View style={{backgroundColor: "transparent", width: "30%", alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderColor: "#383838"}}>
-              <Text style={{color: "white", fontSize: 30}}>{datetimedata.day}</Text>
-              <Text style={{color: "white", fontSize: 12}}>{datetimedata.dayname}</Text>
+            flex: 1,
+            flexDirection: "column",
+            marginLeft: 5
+          }}>
+            <View style={{
+              backgroundColor: "black", 
+              marginBottom: 5, 
+              width: "100%",
+              height: "100%",
+              borderRadius: 5,
+              opacity: 1,
+              borderWidth: 1,
+              borderColor: "#292929",
+              flex: 1,
+              flexDirection: "column",
+              paddingBottom: 5
+            }}>
+              <View style={{backgroundColor: "transparent", width: "100%", flex: 1, flexDirection: "row", maxHeight: 38, minHeight: 38, borderBottomWidth: 1, borderBottomColor: "#292929", alignItems: "center", padding: 10, justifyContent: "space-between"}}>
+                <Text style={{color: "white", fontWeight: "bold"}}>Notifications</Text>
+                <TouchableOpacity onPress={() => { clearNotifs() }} style={{backgroundColor: "#292929", width: 70, height: 25, justifyContent: 'center', alignItems: "center", borderRadius: 5}}>
+                  <Text style={{color: "white", fontSize: 10}}>Clear</Text>
+                </TouchableOpacity>
+              </View>
+              {notificationslist.length == 0? (
+                <View style={{backgroundColor: "transparent", flex: 1, alignItems: "center", justifyContent: "center"}}>
+                  <MatIcon name='notifications-none' style={{color: "grey", fontSize: 50}} />
+                  <Text style={{color: "grey", marginTop: 5, fontSize: 10}}>No Notifications</Text>
+                </View>
+              ) : (
+                <ScrollView style={{backgroundColor: "transparent", flexGrow: 1, padding: 5}}>
+                  <View style={{backgroundColor: "transparent", flex: 1, flexDirection: "column", paddingBottom: 10}}>
+                    {notificationslist.map((data, i) => {
+                      if(data.app == "com.android.vending"){
+                        if(!existingTitle.includes(data.title)){
+                          existingTitle.push(data.title);
+                          return(
+                            <NotificationDrawer key={i} data={data} />
+                          )
+                        }
+                      }
+                      else{
+                        return(
+                          <NotificationDrawer key={i} data={data} />
+                        )
+                      }
+                    })}
+                  </View>
+                </ScrollView>
+              )}
             </View>
-            <View style={{backgroundColor: "transparent", width: "70%", justifyContent: "center", alignItems: "center"}}>
-              <Text style={{color: "white", fontSize: 20}}>{datetimedata.monthname} {datetimedata.year}</Text>
-              <Text style={{color: "white", fontSize: 10}}>{currentDate}</Text>
-              <Text style={{color: "white", fontSize: 10}}>{currentTime}</Text>
+            <View style={{backgroundColor: "black", flex: 1, height: "100%", width: "100%", flexDirection: "row", padding: 10, 
+              borderRadius: 5,
+              opacity: 1,
+              borderWidth: 1,
+              borderColor: "#292929",
+              width: "100%",
+              minHeight: 85,
+              maxHeight: 85}}>
+              <View style={{backgroundColor: "transparent", width: "30%", alignItems: "center", justifyContent: "center", borderRightWidth: 1, borderColor: "#383838"}}>
+                <Text style={{color: "white", fontSize: 20}}>{datetimedata.day}</Text>
+                <Text style={{color: "white", fontSize: 11}}>{datetimedata.dayname}</Text>
+              </View>
+              <View style={{backgroundColor: "transparent", width: "70%", justifyContent: "center", alignItems: "center"}}>
+                <Text style={{color: "white", fontSize: 15}}>{datetimedata.monthname} {datetimedata.year}</Text>
+                <Text style={{color: "white", fontSize: 10}}>{currentDate}</Text>
+                <Text style={{color: "white", fontSize: 10}}>{currentTime}</Text>
+              </View>
             </View>
           </View>
         </Animated.View>
@@ -1294,7 +1643,7 @@ const Home = ({navigation}) => {
                     <ScrollView style={styles.scrollApps} contentContainerStyle={styles.contentscrollApps} fadingEdgeLength={50}>
                       {pwalist.map((apps, i) => {
                         return(
-                          <TouchableOpacity key={i} onPress={() => { openPWA(apps.pwaName, <WebPWA label={apps.pwaName} urlPWA={apps.pwaUrl} />) }} delayLongPress={500} onLongPress={(evt) => { holdPWAOption(apps.id, apps.pwaName, <PWAInfo id={apps.id} name={apps.pwaName} icon={PWAIcon} />) }}>
+                          <TouchableOpacity key={i} onPress={() => { openPWA(apps.pwaName, "PWA", apps.pwaUrl, <WebPWA label={apps.pwaName} urlPWA={apps.pwaUrl} />) }} delayLongPress={500} onLongPress={(evt) => { holdPWAOption(apps.id, apps.pwaName, "Uninstall", apps.pwaUrl, <PWAInfo id={apps.id} name={apps.pwaName} icon={PWAIcon} />) }}>
                             <View style={styles.viewAppsIndv}>
                                 <Image source={PWAIcon} style={styles.logoMenuStyle} />
                                 <Text style={styles.AppIndvLabel} numberOfLines={2}>{apps.pwaName}</Text>
@@ -1309,7 +1658,7 @@ const Home = ({navigation}) => {
             <View style={styles.viewBottomAbsoluteWindow}>
               <View style={{backgroundColor: "transparent", width: "100%", height: "100%", flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
                 <View style={{backgroundColor: "transparent", height: "100%", width: 100, justifyContent: "center", alignItems: "center", flexDirection: "row"}}>
-                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", <Settings navigation={navigation} />) }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
+                  <TouchableOpacity onPress={() => { openDraggable("Settings", "Settings", "System", <Settings navigation={navigation} />) }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>
                     <IonIcon name='settings' size={20} color="white" />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={() => { openDrawerOptions() }} style={{width: 50, height: "100%", justifyContent: "center", alignItems: "center"}}>

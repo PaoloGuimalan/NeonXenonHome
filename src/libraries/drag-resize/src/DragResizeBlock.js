@@ -655,6 +655,7 @@ export class DragResizeBlock extends Component {
   renderConnectors = () => {
     const {
       connectors,
+      minWindow,
       maxWindow
     } = this.props;
 
@@ -675,6 +676,7 @@ export class DragResizeBlock extends Component {
           onMove={maxWindow? function(){return;} : this.connectorsMap[connectorType].onMove}
           onEnd={maxWindow? function(){return;} : this.connectorsMap[connectorType].onEnd}
           maxWindow={maxWindow}
+          minWindow={minWindow}
         />
       );
     });
@@ -695,6 +697,7 @@ export class DragResizeBlock extends Component {
       children,
       isDisabled,
       zIndex,
+      minWindow,
       maxWindow
     } = this.props;
 
@@ -731,10 +734,10 @@ export class DragResizeBlock extends Component {
       <View
         style={{
           position: 'absolute',
-          left: maxWindow? 0 - 9 : x, //default position when max
-          top: maxWindow? 0 - 9 : y, //default position when max
-          width: maxWindow? this.dimensionState.widthState : w, //window sizing
-          height: maxWindow? this.dimensionState.heightState : h, //window sizing
+          left: minWindow? -200 : maxWindow? 0 - 9 : x, //default position when max
+          top: minWindow? -200 : maxWindow? 0 - 9 : y, //default position when max
+          width: minWindow? 200 : maxWindow? this.dimensionState.widthState : w, //window sizing
+          height: minWindow? 200 : maxWindow? this.dimensionState.heightState : h, //window sizing
           padding: CONNECTOR_SIZE / 2,
           zIndex: isSelected ? zIndex + 1 : zIndex
         }}
@@ -752,7 +755,7 @@ export class DragResizeBlock extends Component {
           </View>
         </TouchableWithoutFeedback>
 
-        {isDisabled ? null : this.renderConnectors(maxWindow)}
+        {isDisabled ? null : this.renderConnectors(minWindow, maxWindow)}
 
       </View>
     );

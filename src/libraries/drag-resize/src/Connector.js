@@ -99,6 +99,7 @@ export class Connector extends Component {
       y,
       size,
       type,
+      minWindow,
       maxWindow
     } = this.props;
 
@@ -108,13 +109,13 @@ export class Connector extends Component {
           position: 'absolute',
           left: type == "c"? 7 : x,
           top: type == "c"? 5 : y,
-          width: type == "c"? "70%" : size,
-          height: type == "c"? 30 : size,
+          width: type == "c"? "40%" : size,
+          height: type == "c"? 33 : size,
           borderWidth: 1,
           borderColor: '#292929',
           backgroundColor: 'black',
           borderRadius: type == "c"? 0: 10,
-          opacity: type == "c"? 0 : maxWindow? 0 : 0.5
+          opacity: type == "c"? 0 : minWindow? 0 : maxWindow? 0 : 0.5
         }}
         {...this._panResponder.panHandlers}
       />
