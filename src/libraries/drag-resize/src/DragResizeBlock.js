@@ -734,10 +734,10 @@ export class DragResizeBlock extends Component {
       <View
         style={{
           position: 'absolute',
-          left: minWindow? -200 : maxWindow? 0 - 9 : x, //default position when max
-          top: minWindow? -200 : maxWindow? 0 - 9 : y, //default position when max
-          width: minWindow? 200 : maxWindow? this.dimensionState.widthState : w, //window sizing
-          height: minWindow? 200 : maxWindow? this.dimensionState.heightState : h, //window sizing
+          left: minWindow? Math.abs(w + 200) * - 1 : maxWindow? 0 - 9 : x, //default position when max
+          top: minWindow? Math.abs(h + 200) * - 1 : maxWindow? 0 - 9 : y, //default position when max
+          width: maxWindow? this.dimensionState.widthState : w, //window sizing
+          height: maxWindow? this.dimensionState.heightState : h, //window sizing
           padding: CONNECTOR_SIZE / 2,
           zIndex: isSelected ? zIndex + 1 : zIndex
         }}

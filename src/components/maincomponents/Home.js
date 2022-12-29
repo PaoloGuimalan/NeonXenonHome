@@ -1353,18 +1353,19 @@ const Home = ({navigation}) => {
                   justifyContent: "center",
                   alignItems: "center"
                 }}>
-                  <EntIcon name='archive' style={{fontSize: 25, color: "white"}} />
+                  <EntIcon name='archive' style={{fontSize: 20, color: "white"}} />
                 </View>
                 <TouchableOpacity style={{
                   backgroundColor: "transparent",
                   width: "100%",
+                  height: 20,
                   justifyContent: "center",
                   alignItems: 'center'
                 }} onPress={() => { setminimizedList(!minimizedList) }} >
                   {minimizedList? (
-                    <AntIcon name='up' style={{fontSize: 20, color: "white"}} />
+                    <AntIcon name='up' style={{fontSize: 15, color: "white"}} />
                   ) : (
-                    <AntIcon name='down' style={{fontSize: 20, color: "white"}} />
+                    <AntIcon name='down' style={{fontSize: 15, color: "white"}} />
                   )}
                 </TouchableOpacity>
                 {minimizedList? (
@@ -1403,16 +1404,16 @@ const Home = ({navigation}) => {
                                 alignItems: 'center'
                               }}>
                                 <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
-                                  width: 20,
-                                  height: 20,
+                                  width: 15,
+                                  height: 15,
                                   position: "absolute",
                                   zIndex: 1,
                                   bottom: 0,
                                   right: 5
                                 }} />
                                 <Image source={PWAIcon} style={{
-                                  width: 35,
-                                  height: 35
+                                  width: 30,
+                                  height: 30
                                 }} />
                               </View>
                             ) : comps.type == "News"? (
@@ -1423,14 +1424,15 @@ const Home = ({navigation}) => {
                                 alignItems: 'center'
                               }}>
                                 <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef.split("/")[2]}&size=100`}} style={{
-                                  width: 20,
-                                  height: 20,
+                                  width: 15,
+                                  height: 15,
                                   position: "absolute",
                                   zIndex: 1,
-                                  bottom: 0,
-                                  right: 5
+                                  bottom: 5,
+                                  right: 5,
+                                  borderRadius: 15
                                 }} />
-                                <EntIcon name='news' style={{fontSize: 35, color: "white"}} />
+                                <EntIcon name='news' style={{fontSize: 25, color: "white"}} />
                               </View>
                             ) : comps.type == "Uninstall"? (
                               <View style={{
@@ -1440,14 +1442,14 @@ const Home = ({navigation}) => {
                                 alignItems: 'center'
                               }}>
                                 <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
-                                  width: 20,
-                                  height: 20,
+                                  width: 15,
+                                  height: 15,
                                   position: "absolute",
                                   zIndex: 1,
-                                  bottom: 0,
+                                  bottom: 5,
                                   right: 5
                                 }} />
-                                <EntIcon name='uninstall' style={{fontSize: 35, color: "white"}} />
+                                <EntIcon name='uninstall' style={{fontSize: 25, color: "white"}} />
                               </View>
                             ) : comps.type == "System"? comps.label == "Settings"? (
                               <View style={{
@@ -1456,7 +1458,7 @@ const Home = ({navigation}) => {
                                 justifyContent: "center",
                                 alignItems: 'center'
                               }}>
-                                <IonIcon name='settings' size={35} color="white" />
+                                <IonIcon name='settings' size={25} color="white" />
                               </View>
                             ) : (
                               <View style={{
@@ -1466,8 +1468,8 @@ const Home = ({navigation}) => {
                                 alignItems: 'center'
                               }}>
                                 <Image source={PWAIcon} style={{
-                                  width: 35,
-                                  height: 35
+                                  width: 30,
+                                  height: 30
                                 }} />
                               </View>
                             ) : (
@@ -1478,8 +1480,8 @@ const Home = ({navigation}) => {
                                 alignItems: 'center'
                               }}>
                                 <Image source={PWAIcon} style={{
-                                  width: 35,
-                                  height: 35
+                                  width: 30,
+                                  height: 30
                                 }} />
                               </View>
                             )}
