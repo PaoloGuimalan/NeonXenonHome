@@ -17,13 +17,33 @@ const DraggableIndex = ({instance, label, Component}) => {
   const closeWindow = () => {
     var arrDeletionModification = []
 
-    for(var i = 0; i < arrComponents.length; i++){
+    const count = arrComponents.filter(data => {
+      if(data.closed == false){
+        return true;
+      }
+
+      return false;
+    }).length
+
+    // console.log(count);
+
+    if(count <= 1 ){
+      dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: []})
+    }
+    else{
+      //old default algorithm
+
+      for(var i = 0; i < arrComponents.length; i++){
         // console.log(arrComponents[i]);
         if(arrComponents[i].instance != instance){
             arrDeletionModification.push(arrComponents[i])
         }
+        else{
+            arrDeletionModification.push({...arrComponents[i], closed: true, component: null})
+        }
+      }
+      dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: arrDeletionModification})
     }
-    dispatch({type: SET_DRAGGABLE_WINDOW, draggablewindow: arrDeletionModification})
   }
 
   const maximizeWindow = () => {

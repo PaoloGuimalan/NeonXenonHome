@@ -1078,6 +1078,7 @@ const Home = ({navigation}) => {
         instance: arrComponents.length + 1,
         maximized: false,
         minimized: false,
+        closed: false,
         label: label,
         type: type,
         component: <DraggableIndex instance={arrComponents.length + 1} label={label} Component={Component} />
@@ -1092,6 +1093,7 @@ const Home = ({navigation}) => {
         instance: arrComponents.length + 1,
         maximized: false,
         minimized: false,
+        closed: false,
         label: label,
         type: type,
         urlRef: urlRef,
@@ -1107,6 +1109,7 @@ const Home = ({navigation}) => {
         instance: arrComponents.length + 1,
         maximized: false,
         minimized: false,
+        closed: false,
         label: name,
         type: type,
         urlRef: urlRef,
@@ -1223,11 +1226,13 @@ const Home = ({navigation}) => {
     <View style={styles.mainView}>
       <ImageBackground blurRadius={0} source={NeonBgV2Landscape} style={styles.imagebackgroundstyle}>
         {arrComponents.map((comps, i) => {
-          return(
-            <DragResizeBlock key={i} minWindow={comps.minimized} maxWindow={comps.maximized}>
-              {comps.component}
-            </DragResizeBlock>
-          )
+          if(comps.closed == false){
+            return(
+              <DragResizeBlock key={i} minWindow={comps.minimized} maxWindow={comps.maximized}>
+                {comps.component}
+              </DragResizeBlock>
+            )
+          }
         })}
         <Animated.View style={animStyles.viewWindowWeatherNews}>
           <View style={{backgroundColor: "transparent", paddingTop: 5, height: 40, borderBottomWidth: 1, borderColor: "#292929", justifyContent: "center", alignItems: "center", width: "100%"}}>
@@ -1353,7 +1358,18 @@ const Home = ({navigation}) => {
                   justifyContent: "center",
                   alignItems: "center"
                 }}>
-                  <EntIcon name='archive' style={{fontSize: 20, color: "white"}} />
+                  <MCIcon name='archive' style={{fontSize: 20, color: "white"}} />
+                  <Text style={{color: "white", position: "absolute", bottom: 5, right: 10, fontSize: 10}}>{arrComponents.filter(cnt => {
+                    if(cnt.closed == false){
+                      return true;
+                    }
+                    return false;
+                  }).length != 0? arrComponents.filter(cnt => {
+                    if(cnt.closed == false){
+                      return true;
+                    }
+                    return false;
+                  }).length : null}</Text>
                 </View>
                 <TouchableOpacity style={{
                   backgroundColor: "transparent",
@@ -1369,127 +1385,138 @@ const Home = ({navigation}) => {
                   )}
                 </TouchableOpacity>
                 {minimizedList? (
-                  <View style={{
-                    backgroundColor: "black",
-                    borderTopLeftRadius: 5,
-                    borderBottomLeftRadius: 5,
-                    borderTopRightRadius: dateTimeWindow? 5 : 0,
-                    borderBottomRightRadius: dateTimeWindow? 5 : 0,
-                    borderWidth: 1,
-                    borderColor: "#292929",
-                    width: "100%",
-                    flex: 1,
-                    paddingTop: 10,
-                    paddingBottom: 10
-                  }}>
-                    <ScrollView style={{
-                      flex: 1,
-                      flexGrow: 1,
-                      flexDirection: "column"
-                    }} contentContainerStyle={{
-                      alignItems: "center"
-                    }}>
-                      {arrComponents.map((comps, i) => {
-                        return(
-                          <TouchableOpacity key={i} style={{
-                            width: "100%",
-                            justifyContent: "center",
-                            alignItems: 'center'
-                          }} onPress={() => { unminimizeWindow(comps.instance, comps.minimized) }}>
-                            {comps.type == "PWA"? (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
-                                  width: 15,
-                                  height: 15,
-                                  position: "absolute",
-                                  zIndex: 1,
-                                  bottom: 0,
-                                  right: 5
-                                }} />
-                                <Image source={PWAIcon} style={{
-                                  width: 30,
-                                  height: 30
-                                }} />
-                              </View>
-                            ) : comps.type == "News"? (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef.split("/")[2]}&size=100`}} style={{
-                                  width: 15,
-                                  height: 15,
-                                  position: "absolute",
-                                  zIndex: 1,
-                                  bottom: 5,
-                                  right: 5,
-                                  borderRadius: 15
-                                }} />
-                                <EntIcon name='news' style={{fontSize: 25, color: "white"}} />
-                              </View>
-                            ) : comps.type == "Uninstall"? (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
-                                  width: 15,
-                                  height: 15,
-                                  position: "absolute",
-                                  zIndex: 1,
-                                  bottom: 5,
-                                  right: 5
-                                }} />
-                                <EntIcon name='uninstall' style={{fontSize: 25, color: "white"}} />
-                              </View>
-                            ) : comps.type == "System"? comps.label == "Settings"? (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <IonIcon name='settings' size={25} color="white" />
-                              </View>
-                            ) : (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <Image source={PWAIcon} style={{
-                                  width: 30,
-                                  height: 30
-                                }} />
-                              </View>
-                            ) : (
-                              <View style={{
-                                width: "100%",
-                                height: 45,
-                                justifyContent: "center",
-                                alignItems: 'center'
-                              }}>
-                                <Image source={PWAIcon} style={{
-                                  width: 30,
-                                  height: 30
-                                }} />
-                              </View>
-                            )}
-                          </TouchableOpacity>
-                        )
-                      })}
-                    </ScrollView>
-                  </View>
+                  arrComponents.filter(cnt => {
+                    if(cnt.closed == false){
+                      return true;
+                    }
+                    return false;
+                  }).length != 0? (
+                      <View style={{
+                        backgroundColor: "black",
+                        borderTopLeftRadius: 5,
+                        borderBottomLeftRadius: 5,
+                        borderTopRightRadius: dateTimeWindow? 5 : 0,
+                        borderBottomRightRadius: dateTimeWindow? 5 : 0,
+                        borderWidth: 1,
+                        borderColor: "#292929",
+                        width: "100%",
+                        flex: 1,
+                        paddingTop: 10,
+                        paddingBottom: 10
+                      }}>
+                        <ScrollView style={{
+                          flex: 1,
+                          flexGrow: 1,
+                          flexDirection: "column"
+                        }} contentContainerStyle={{
+                          alignItems: "center"
+                        }}>
+                          {arrComponents.map((comps, i) => {
+                            if(comps.closed == false){
+                              return(
+                                <TouchableOpacity key={i} style={{
+                                  width: "100%",
+                                  justifyContent: "center",
+                                  alignItems: 'center'
+                                }} onPress={() => { unminimizeWindow(comps.instance, comps.minimized) }}>
+                                  {comps.type == "PWA"? (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
+                                        width: 15,
+                                        height: 15,
+                                        position: "absolute",
+                                        zIndex: 1,
+                                        bottom: 0,
+                                        right: 5
+                                      }} />
+                                      <Image source={PWAIcon} style={{
+                                        width: 30,
+                                        height: 30
+                                      }} />
+                                    </View>
+                                  ) : comps.type == "News"? (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef.split("/")[2]}&size=100`}} style={{
+                                        width: 15,
+                                        height: 15,
+                                        position: "absolute",
+                                        zIndex: 1,
+                                        bottom: 5,
+                                        right: 5,
+                                        borderRadius: 15
+                                      }} />
+                                      <EntIcon name='news' style={{fontSize: 25, color: "white"}} />
+                                    </View>
+                                  ) : comps.type == "Uninstall"? (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <Image source={{uri: `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${comps.urlRef}&size=100`}} style={{
+                                        width: 15,
+                                        height: 15,
+                                        position: "absolute",
+                                        zIndex: 1,
+                                        bottom: 5,
+                                        right: 5
+                                      }} />
+                                      <EntIcon name='uninstall' style={{fontSize: 25, color: "white"}} />
+                                    </View>
+                                  ) : comps.type == "System"? comps.label == "Settings"? (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <IonIcon name='settings' size={25} color="white" />
+                                    </View>
+                                  ) : (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <Image source={PWAIcon} style={{
+                                        width: 30,
+                                        height: 30
+                                      }} />
+                                    </View>
+                                  ) : (
+                                    <View style={{
+                                      width: "100%",
+                                      height: 45,
+                                      justifyContent: "center",
+                                      alignItems: 'center'
+                                    }}>
+                                      <Image source={PWAIcon} style={{
+                                        width: 30,
+                                        height: 30
+                                      }} />
+                                    </View>
+                                  )}
+                                </TouchableOpacity>
+                              )
+                            }
+                          })}
+                        </ScrollView>
+                      </View>
+                  ) : (
+                    <MCIcon name='archive-cancel' style={{fontSize: 20, color: "white"}} />
+                  )
                 ) : null}
               </View>
           </View>
